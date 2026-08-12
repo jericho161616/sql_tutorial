@@ -1,6 +1,6 @@
 # The SQL Study Console
 
-A single-file web app covering **weeks 1–7** of the course, with real PostgreSQL running
+A single-file web app covering **weeks 1–10** of the course, with real PostgreSQL running
 inside your browser tab.
 
 ## How it works
@@ -33,7 +33,7 @@ python3 -m http.server 8000
 
 ## What it does
 
-- Twenty-one exercises across weeks 1–7, each with the real question and expected row count
+- Thirty exercises across weeks 1–10, each with the real question and expected row count
 - **Answer checking** by running the reference solution against your result and comparing —
   it tells you *how* you're wrong (row count, column count, wrong order, wrong values), not
   just that you are
@@ -44,13 +44,26 @@ python3 -m http.server 8000
 
 ## What it doesn't do
 
-Weeks 8–12 are complete in the repo as markdown but aren't in the app yet. Work those in the
+Weeks 11–12 aren't in the app. Week 11 is about indexes and `EXPLAIN` — those change how
+*fast* a query runs, never what it returns, so there is nothing for a result-checker to grade.
+Week 12 ends in a capstone whose value is the written analysis. Both are better done in the
 [Supabase SQL editor](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql)
 alongside the week folders.
 
-Weeks 9–12 write data — `CREATE TABLE`, `INSERT`, `UPDATE`, indexes, views. Those work fine
-against Supabase, and would work here too, but the app's answer-checking is built around
-`SELECT` results, so it isn't the right tool for them yet.
+## Two kinds of checking
+
+Weeks 1–8 are read-only. Your result is compared against the reference solution's result, and
+mismatches are reported by kind — wrong row count, wrong column count, right rows in the wrong
+order, or wrong values.
+
+Weeks 9–10 **write** to the database, so there is no result to compare. Instead the app runs a
+check query against the database *afterwards* and grades the outcome — inspecting
+`information_schema` to confirm your `CREATE TABLE` actually carries the constraints asked
+for, or counting rows to confirm an `UPDATE` did what it should. Extra columns and different
+names are fine; only the stated requirements are checked.
+
+Those exercises are marked with a warning, and the check query's output is shown so you can
+see exactly what was measured. All of them are safe to re-run.
 
 ## A note on the first load
 

@@ -277,7 +277,7 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
     <div class="rail-heading">Written, not yet in the app</div>
     <ul class="week-list" id="weeklocked"></ul>
     <div class="rail-foot">
-      <p class="scratch-note">Weeks 8–12 are complete in the repo as markdown. They involve creating and changing data, so they need a different kind of checking than these do.</p>
+      <p class="scratch-note">Weeks 11–12 are complete in the repo as markdown. Indexes change how fast a query runs, never what it returns, so they need measuring rather than checking.<br><br>Weeks 9 and 10 <b>write</b> to the database. Reset any time — your progress and saved answers are kept.</p>
     </div>
   </nav>
 
@@ -519,6 +519,52 @@ SELECT ROW_NUMBER() OVER (ORDER BY order_id, seq), order_id, paid_on, amount,
   CASE (order_id+seq) % 4 WHEN 0 THEN 'card' WHEN 1 THEN 'paypal' WHEN 2 THEN 'card'
        ELSE 'bank_transfer' END, status
 FROM rules;
+
+CREATE TABLE raw_signups (
+  row_id integer, full_name text, email text, country text,
+  signup_date_text text, plan text, monthly_spend text);
+
+INSERT INTO raw_signups VALUES
+ ( 1,'Elena Sarmiento','elena.sarmiento@example.com','Philippines','2024-01-14','pro','49.00'),
+ ( 2,'Robert Ashcroft','r.ashcroft@example.com','United Kingdom','2024-01-22','enterprise','299.00'),
+ ( 3,'Yuki Tanaka','yuki.tanaka@example.com','Japan','2024-02-03','basic','19.00'),
+ ( 4,'Nathan Cole','nathan.cole@example.com','USA','2024-02-11','pro','49.00'),
+ ( 5,'Marie Fontaine','marie.fontaine@example.com','U.S.A.','2024-02-18','pro','49.00'),
+ ( 6,'Derek Lowell','derek.lowell@example.com','united states','2024-02-25','basic','19.00'),
+ ( 7,'Paula Nkemdirim','paula.n@example.com','  United States ','2024-03-02','pro','49.00'),
+ ( 8,'Ian Hargreaves','ian.hargreaves@example.com','UK','2024-03-09','basic','19.00'),
+ ( 9,'Fiona Bell','fiona.bell@example.com','U.K.','2024-03-16','pro','49.00'),
+ (10,'Callum Reid','callum.reid@example.com','britain','2024-03-23','basic','19.00'),
+ (11,'Sofia Petrova','sofia.petrova@example.com','Bulgaria','05/04/2024','pro','49.00'),
+ (12,'Jonas Bergmann','jonas.bergmann@example.com','Germany','2024-4-12','enterprise','299.00'),
+ (13,'Aisha Rahman','aisha.rahman@example.com','Bangladesh','April 19 2024','basic','19.00'),
+ (14,'Wei Zhang','wei.zhang@example.com','Singapore','26-04-2024','pro','49.00'),
+ (15,'Camila Rojas','camila.rojas@example.com','Chile','2024/05/03','basic','19.00'),
+ (16,'Hugo Almeida','hugo.almeida@example.com','Portugal',NULL,'pro','49.00'),
+ (17,'Leila Haddad','leila.haddad@example.com','Lebanon','','basic','19.00'),
+ (18,'Tariq Hassan','tariq.hassan@example.com','N/A','2024-05-24','pro','49.00'),
+ (19,'Emma Lindgren','emma.lindgren@example.com',NULL,'2024-05-31','basic',''),
+ (20,'Andres Guzman','andres.guzman@example.com','unknown','2024-06-07','pro','NULL'),
+ (21,'Meera Kapoor','meera.kapoor@example.com','India','2024-06-14','pro','49.00'),
+ (22,'meera kapoor','MEERA.KAPOOR@example.com','India','2024-06-14','pro','49.00'),
+ (23,'Meera  Kapoor ',' meera.kapoor@example.com ','india','2024-06-14','Pro','49.00'),
+ (24,'Carlos Mendoza','carlos.mendoza@example.com','Mexico','2024-06-21','basic','19.00'),
+ (25,'Carlos Mendoza','carlos.mendoza@example.com','Mexico','2024-06-21','basic','19.00'),
+ (26,'Ryan Mitchell','ryan.mitchell@example.com','Australia','2024-06-28','PRO','49.00'),
+ (27,'Sinead Kavanagh','sinead.k@example.com','Ireland','2024-07-05','Basic','19.00'),
+ (28,'Victor Ivanov','victor.ivanov@example.com','Estonia','2024-07-12',' pro ','49.00'),
+ (29,'Zainab Osei','zainab.osei@example.com','Ghana','2024-07-19','ENTERPRISE','299.00'),
+ (30,'Thomas Bergeron','thomas.bergeron@example.com','Canada','2024-07-26','enterprise','299.00'),
+ (31,'Nadia Iqbal','nadia.iqbal@example.com','Pakistan','2024-08-02','pro','$49.00'),
+ (32,'Grace Okonkwo','grace.okonkwo@example.com','Nigeria','2024-08-09','enterprise','1,299.00'),
+ (33,'Ahmed Al-Rashid','ahmed.rashid@example.com','UAE','2024-08-16','enterprise','299'),
+ (34,'Ingrid Halvorsen','ingrid.h@example.com','Norway','2024-08-23','pro','49.0'),
+ (35,'Test Test','test@test.com','Testland','2024-08-30','basic','-19.00'),
+ (36,'QA Automation','qa+bot@example.com','Nowhere','1900-01-01','basic','0.00'),
+ (37,'Big Spender Corp','ap@bigspender.example.com','United States','2024-09-06','enterprise','9999999.00'),
+ (38,'Future Person','future@example.com','Canada','2099-12-31','pro','49.00'),
+ (39,'Broken Email','not-an-email','Ireland','2024-09-13','basic','19.00'),
+ (40,'No Email At All',NULL,'Ghana','2024-09-20','pro','49.00');
 `;
 
 /* ==========================================================
@@ -531,9 +577,12 @@ const WEEKS = [
   {n:4, name:"Joins I", blurb:"Keys, INNER JOIN and LEFT JOIN. Real questions rarely fit in one table — this week you put them back together."},
   {n:5, name:"Joins II & fan-out", blurb:"Self-joins, anti-joins, and fan-out — the bug that makes a query report 18% more revenue than the company earned, without raising a single error. The most important week in the first half."},
   {n:6, name:"Subqueries & CTEs", blurb:"How to solve a hard question by writing three easy queries instead of one impossible one. The single biggest improvement you can make to how readable your SQL is."},
-  {n:7, name:"Window functions", blurb:"Ranking, running totals, and comparing a row to the one before it — while keeping every row. The biggest jump in what you can do."}
+  {n:7, name:"Window functions", blurb:"Ranking, running totals, and comparing a row to the one before it — while keeping every row. The biggest jump in what you can do."},
+  {n:8, name:"Types & cleaning", blurb:"Real data fights back. Dates in five formats, money stored as text, eight spellings of three plan names. You'll profile the mess before changing a thing — which is the whole discipline."},
+  {n:9, name:"Schema design & DDL", blurb:"You stop reading tables and start designing them. Types, constraints, keys. This is where the database-administration half begins, and it writes to the database — see the note on each exercise."},
+  {n:10, name:"Writing data safely", blurb:"INSERT, UPDATE, DELETE and transactions. Includes the four-second habit that prevents the mistake everyone makes exactly once."}
 ];
-const LOCKED = ["Types & cleaning","Schema design","Writing data","Indexes","Views & capstone"];
+const LOCKED = ["Indexes & performance","Views, security & capstone"];
 
 const EX = {
 1:[
@@ -696,6 +745,87 @@ const EX = {
   hints:["Same shape as 7.2: number the rows inside a CTE, then keep only number 1.",
    "Partition by customer, order by date descending so the newest order gets number 1.",
    "<b>Use <code>ROW_NUMBER</code>, not <code>RANK</code>.</b> If a customer placed two orders on the same day, RANK gives both rank 1 and you would get two rows for one customer. Add <code>, o.order_id DESC</code> as a tiebreaker so the same query gives the same answer every time."]}
+],
+8:[
+ {id:"8.1", title:"Exercise 8.1", ordered:false,
+  q:"<b>Profile before you clean.</b> Write one query against <code>raw_signups</code> returning a single row with five columns: <code>total_rows</code>, <code>null_emails</code>, <code>missing_dates</code> (NULL <i>or</i> blank), <code>plan_spellings</code> and <code>country_spellings</code>.",
+  expect:"Expected: 1 row — 40, 1, 2, 8, 34",
+  sol:"SELECT count(*)                                          AS total_rows,\n       count(*) FILTER (WHERE email IS NULL)             AS null_emails,\n       count(*) FILTER (WHERE signup_date_text IS NULL\n                           OR btrim(signup_date_text) = '') AS missing_dates,\n       count(DISTINCT plan)                              AS plan_spellings,\n       count(DISTINCT country)                           AS country_spellings\nFROM   raw_signups;",
+  hints:["Look at the table first — <code>SELECT * FROM raw_signups LIMIT 10;</code>. Every column is <code>text</code>, because that is how raw data arrives.",
+   "<code>count(*) FILTER (WHERE ...)</code> counts a subset, and you can have several in one row. <code>count(DISTINCT col)</code> counts unique values.",
+   "A blank string and a NULL are different things and both mean “missing” here: <code>WHERE signup_date_text IS NULL OR btrim(signup_date_text) = ''</code>. The result — 8 spellings for 3 real plans, 34 for about 28 countries — is your evidence that every past report grouped by these was wrong."]},
+ {id:"8.2", title:"Exercise 8.2", ordered:true,
+  q:"The <code>plan</code> column should have three values but has eight spellings. Show each raw value, its cleaned form, and how many rows use it — as <code>raw_plan</code>, <code>clean_plan</code> and <code>n</code>. Sort by cleaned value, then raw.",
+  expect:"Expected: 8 rows collapsing to 3 distinct clean values",
+  sol:"SELECT   plan                 AS raw_plan,\n         lower(btrim(plan))   AS clean_plan,\n         count(*)             AS n\nFROM     raw_signups\nGROUP BY plan, lower(btrim(plan))\nORDER BY clean_plan, raw_plan;",
+  hints:["Two problems are mixed together: capital letters, and stray spaces around the value.",
+   "<code>lower()</code> fixes the case. <code>btrim()</code> removes spaces from both ends. You need both — <code>' pro '</code> lowercased is still <code>' pro '</code>, a different string from <code>'pro'</code>.",
+   "Group by the raw value <i>and</i> the cleaned one so you can see the mapping: <code>GROUP BY plan, lower(btrim(plan))</code>."]},
+ {id:"8.3", title:"Exercise 8.3", ordered:true,
+  q:"Parse the dates. Return <code>row_id</code>, the raw text as <code>raw_date</code>, and a real <code>date</code> as <code>parsed_date</code> — <code>NULL</code> where it cannot be parsed, never an error. Sort by <code>row_id</code>. There are five different formats plus a blank and a NULL.",
+  expect:"Expected: 40 rows, exactly 2 with a NULL parsed_date",
+  sol:"SELECT row_id,\n       signup_date_text AS raw_date,\n       CASE\n           WHEN signup_date_text IS NULL\n             OR btrim(signup_date_text) = ''            THEN NULL\n           WHEN signup_date_text ~ '^\\d{4}-\\d{1,2}-\\d{1,2}$'\n                THEN to_date(signup_date_text, 'YYYY-MM-DD')\n           WHEN signup_date_text ~ '^\\d{4}/\\d{1,2}/\\d{1,2}$'\n                THEN to_date(signup_date_text, 'YYYY/MM/DD')\n           WHEN signup_date_text ~ '^\\d{1,2}/\\d{1,2}/\\d{4}$'\n                THEN to_date(signup_date_text, 'DD/MM/YYYY')\n           WHEN signup_date_text ~ '^\\d{1,2}-\\d{1,2}-\\d{4}$'\n                THEN to_date(signup_date_text, 'DD-MM-YYYY')\n           WHEN signup_date_text ~ '^[A-Za-z]+ \\d{1,2} \\d{4}$'\n                THEN to_date(signup_date_text, 'Month DD YYYY')\n           ELSE NULL\n       END AS parsed_date\nFROM   raw_signups\nORDER  BY row_id;",
+  hints:["Run <code>SELECT DISTINCT signup_date_text FROM raw_signups;</code> first and write down the formats you can see. There are five, plus a blank and a NULL.",
+   "<b>Test the format before converting.</b> Calling <code>to_date</code> on the wrong format throws an error, and one bad row aborts the whole statement. Use a regex test in each <code>WHEN</code>: <code>WHEN signup_date_text ~ '^\\d{4}-\\d{1,2}-\\d{1,2}$' THEN to_date(...)</code>.",
+   "Formats present: <code>YYYY-MM-DD</code>, <code>YYYY/MM/DD</code>, <code>DD/MM/YYYY</code>, <code>DD-MM-YYYY</code>, and <code>Month DD YYYY</code>. Note <code>05/04/2024</code> is genuinely ambiguous — 5 April or 4 May depending on who wrote the file. Pick one, and say in a comment that you did."]}
+],
+9:[
+ {id:"9.1", title:"Exercise 9.1", ordered:false, writes:true,
+  q:"Create a <code>suppliers</code> table. It needs: an auto-generated primary key; a <code>name</code> that is <b>required</b>; a <code>country</code>; a <code>contact_email</code> that must be <b>unique</b>; a <code>payment_terms</code> restricted to <code>net30</code>, <code>net60</code> or <code>prepaid</code>; an <code>is_active</code> flag <b>defaulting to true</b>; and a <code>created_at</code> timestamp set automatically.",
+  expect:"Checked by inspecting the schema you create — extra columns are fine",
+  sol:"CREATE TABLE suppliers (\n    supplier_id   integer     GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    name          text        NOT NULL,\n    country       text,\n    contact_email text        UNIQUE,\n    payment_terms text        NOT NULL DEFAULT 'net30'\n                              CHECK (payment_terms IN ('net30','net60','prepaid')),\n    is_active     boolean     NOT NULL DEFAULT true,\n    created_at    timestamptz NOT NULL DEFAULT now()\n);",
+  verify:"SELECT (SELECT count(*) FROM information_schema.tables WHERE table_schema='shop' AND table_name='suppliers')::int AS table_made,\n       (SELECT count(*) FROM information_schema.columns WHERE table_schema='shop' AND table_name='suppliers' AND column_name='name' AND is_nullable='NO')::int AS name_required,\n       (SELECT count(*) FROM information_schema.columns WHERE table_schema='shop' AND table_name='suppliers' AND column_name='payment_terms')::int AS has_terms,\n       (SELECT count(*) FROM information_schema.columns WHERE table_schema='shop' AND table_name='suppliers' AND column_name='is_active' AND column_default IS NOT NULL)::int AS active_default,\n       (SELECT count(*) FROM information_schema.table_constraints WHERE table_schema='shop' AND table_name='suppliers' AND constraint_type='PRIMARY KEY')::int AS has_pk,\n       (SELECT count(*) FROM information_schema.table_constraints WHERE table_schema='shop' AND table_name='suppliers' AND constraint_type='UNIQUE')::int AS has_unique;",
+  expected:[["1","1","1","1","1","1"]],
+  hints:["Shape: <code>CREATE TABLE suppliers ( column_name type CONSTRAINTS, ... );</code> — one line per column.",
+   "<code>GENERATED ALWAYS AS IDENTITY PRIMARY KEY</code> makes the database issue IDs. <code>NOT NULL</code> makes a column required. <code>UNIQUE</code> forbids duplicates. <code>DEFAULT true</code> supplies a value when none is given.",
+   "Restrict a column to a fixed set with <code>CHECK (payment_terms IN ('net30','net60','prepaid'))</code>, and use <code>timestamptz NOT NULL DEFAULT now()</code> for the timestamp so the <i>database</i> stamps it, not whichever machine happened to call it."]},
+ {id:"9.2", title:"Exercise 9.2", ordered:false, writes:true,
+  q:"Add a <code>supplier_id</code> column to <code>products</code> that references <code>suppliers</code>. It must be <b>nullable</b>. Then answer for yourself: why can't it be <code>NOT NULL</code> right now, even though every product should eventually have one?",
+  expect:"Checked by inspecting the column and its foreign key",
+  sol:"ALTER TABLE products\n  ADD COLUMN supplier_id integer REFERENCES suppliers (supplier_id);",
+  verify:"SELECT (SELECT count(*) FROM information_schema.columns WHERE table_schema='shop' AND table_name='products' AND column_name='supplier_id' AND is_nullable='YES')::int AS nullable_col,\n       (SELECT count(*) FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage k ON k.constraint_name = tc.constraint_name AND k.table_schema = tc.table_schema WHERE tc.table_schema='shop' AND tc.table_name='products' AND tc.constraint_type='FOREIGN KEY' AND k.column_name='supplier_id')::int AS has_fk;",
+  expected:[["1","1"]],
+  hints:["<code>ALTER TABLE products ADD COLUMN ...</code> is the shape.",
+   "A foreign key is declared inline with <code>REFERENCES suppliers (supplier_id)</code>.",
+   "<b>It cannot be NOT NULL yet</b> because <code>products</code> already has 25 rows and there is no value to put in them — Postgres would refuse. The real-world sequence is always three steps: add the column nullable, backfill every row with an UPDATE, then <code>ALTER COLUMN ... SET NOT NULL</code>."]},
+ {id:"9.3", title:"Exercise 9.3", ordered:false, writes:true,
+  q:"Design a returns system as <b>two</b> tables. <code>returns</code> covers one order and has a status. <code>return_items</code> holds one row per returned product, with a quantity that must be positive, and it must reference <code>returns</code>. Create both.",
+  expect:"Checked by inspecting both tables and the link between them",
+  sol:"CREATE TABLE returns (\n    return_id    integer     GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    order_id     integer     NOT NULL REFERENCES orders (order_id),\n    status       text        NOT NULL DEFAULT 'requested'\n                             CHECK (status IN ('requested','approved','received','refunded','rejected')),\n    requested_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE TABLE return_items (\n    return_item_id integer       GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    return_id      integer       NOT NULL REFERENCES returns (return_id) ON DELETE CASCADE,\n    product_id     integer       NOT NULL REFERENCES products (product_id),\n    quantity       integer       NOT NULL CHECK (quantity > 0),\n    reason         text          NOT NULL,\n    refund_amount  numeric(10,2) NOT NULL DEFAULT 0\n);",
+  verify:"SELECT (SELECT count(*) FROM information_schema.tables WHERE table_schema='shop' AND table_name='returns')::int AS returns_made,\n       (SELECT count(*) FROM information_schema.tables WHERE table_schema='shop' AND table_name='return_items')::int AS items_made,\n       (SELECT count(*) FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage k ON k.constraint_name = tc.constraint_name AND k.table_schema = tc.table_schema WHERE tc.table_schema='shop' AND tc.table_name='return_items' AND tc.constraint_type='FOREIGN KEY' AND k.column_name='return_id')::int AS linked,\n       (SELECT count(*) FROM information_schema.columns WHERE table_schema='shop' AND table_name='return_items' AND column_name='quantity' AND is_nullable='NO')::int AS qty_required;",
+  expected:[["1","1","1","1"]],
+  hints:["<b>Why two tables?</b> Say out loud what one row is. “One return” and “one product within a return” are two different sentences — so they are two tables.",
+   "Create <code>returns</code> first. <code>return_items</code> cannot reference a table that does not exist yet.",
+   "Use <code>ON DELETE CASCADE</code> on <code>return_items.return_id</code> — a return line is meaningless without its return, so it is genuinely owned by it. Do <i>not</i> cascade from <code>orders</code>: deleting an order should be refused while a financial record points at it."]}
+],
+10:[
+ {id:"10.1", title:"Exercise 10.1", ordered:false, writes:true,
+  q:"Insert two suppliers into the table you built in week 9: <b>Pacific Components</b> (Singapore, net60) and <b>Nordic Power</b> (Norway, prepaid). Use <code>RETURNING</code> so you can see the IDs the database generated.",
+  expect:"Checked by looking for both suppliers afterwards",
+  sol:"INSERT INTO suppliers (name, country, payment_terms)\nVALUES ('Pacific Components', 'Singapore', 'net60'),\n       ('Nordic Power',       'Norway',    'prepaid')\nRETURNING supplier_id, name, payment_terms;",
+  verify:"SELECT (count(*) FILTER (WHERE name = 'Pacific Components') >= 1) AS pacific_added,\n       (count(*) FILTER (WHERE name = 'Nordic Power')       >= 1) AS nordic_added\nFROM   suppliers;",
+  expected:[["true","true"]],
+  hints:["This needs exercise 9.1 done first — the <code>suppliers</code> table has to exist.",
+   "<b>Always name your columns:</b> <code>INSERT INTO suppliers (name, country, payment_terms) VALUES (...)</code>. Omitting the names makes the statement depend on column order, so adding a column later silently breaks it.",
+   "Insert several rows in one statement by separating the value lists with commas. Add <code>RETURNING supplier_id, name</code> to get the generated IDs back without a second query — genuinely useful when you need the new ID immediately."]},
+ {id:"10.2", title:"Exercise 10.2", ordered:false, writes:true,
+  q:"Week 1 found that the two Software products show <code>stock_qty = 0</code>, which wrongly reads as “sold out” for a licence. Add a nullable <code>is_physical boolean</code> column to <code>products</code>, then set it to <code>false</code> for Software and <code>true</code> for everything else. <b>Leave no NULLs.</b>",
+  expect:"Expected afterwards: 2 non-physical, 23 physical, 0 unset",
+  sol:"ALTER TABLE products ADD COLUMN IF NOT EXISTS is_physical boolean;\n\nUPDATE products SET is_physical = false WHERE category = 'Software';\nUPDATE products SET is_physical = true  WHERE category <> 'Software';",
+  verify:"SELECT count(*) FILTER (WHERE is_physical = false)::int AS non_physical,\n       count(*) FILTER (WHERE is_physical = true)::int  AS physical,\n       count(*) FILTER (WHERE is_physical IS NULL)::int AS still_unset\nFROM   products;",
+  expected:[["2","23","0"]],
+  hints:["Three statements. Add the column first — it must exist before you can set it. Use <code>ADD COLUMN IF NOT EXISTS</code> so you can re-run this safely.",
+   "<b>Run the SELECT before the UPDATE.</b> <code>SELECT * FROM products WHERE category = 'Software';</code> should return 2 rows. If it returns 25, your WHERE is wrong and you have just found out for free.",
+   "Two updates: <code>WHERE category = 'Software'</code> then <code>WHERE category &lt;&gt; 'Software'</code>. Check the counts add to 25 afterwards — 2 + 23. If they do not, some rows matched neither, which is exactly the NULL trap from week 2."]},
+ {id:"10.3", title:"Exercise 10.3", ordered:false, writes:true,
+  q:"Move 10 units of stock from product 6 to product 7, <b>inside a single transaction</b>. Product 6 currently holds 340 and product 7 holds 285, so they must end at <b>330</b> and <b>295</b>. Set the values explicitly rather than adding and subtracting, so re-running cannot drift. Finish with <code>COMMIT</code>.",
+  expect:"Expected afterwards: product 6 = 330, product 7 = 295",
+  sol:"BEGIN;\n\nUPDATE products SET stock_qty = 330 WHERE product_id = 6;\nUPDATE products SET stock_qty = 295 WHERE product_id = 7;\n\nCOMMIT;",
+  verify:"SELECT stock_qty::int FROM products WHERE product_id IN (6,7) ORDER BY product_id;",
+  expected:[["330"],["295"]],
+  hints:["Wrap the two updates in <code>BEGIN;</code> … <code>COMMIT;</code> and run the whole block in one go.",
+   "<b>Why it must be one transaction:</b> if the first UPDATE commits and the connection dies before the second, 10 units have vanished from the world. Stock says 330 and 285 — ten short — with nothing recording that a transfer was half-finished. That is atomicity, the A in ACID.",
+   "Try <code>ROLLBACK;</code> instead of <code>COMMIT;</code> first and re-check the stock — nothing changed. That is your undo button, and it is why you can run something risky, look at the result, and back out."]}
 ]};
 
 const SCHEMA_REF = [
@@ -949,8 +1079,11 @@ function renderEx(){
   const e = cur();
   $("exlabel").textContent = e.title;
   $("question").innerHTML = e.q;
-  $("expect").textContent = e.expect;
-  $("editorlbl").textContent = "Your query";
+  $("expect").innerHTML = (e.writes
+      ? `<span style="color:var(--ochre);font-weight:700">⚠ This one changes the database.</span>
+         Run “Reset database” any time to put it back. · `
+      : "") + esc(e.expect);
+  $("editorlbl").textContent = e.writes ? "Your statements" : "Your query";
   const pill = $("expill");
   if (state.solved[e.id]) { pill.textContent="Solved"; pill.className="pill solved"; }
   else if (state.ran[e.id]) { pill.textContent="Attempted"; pill.className="pill"; }
@@ -1050,6 +1183,33 @@ function norm(v){
 }
 function rowKey(row, fields){ return fields.map(f => norm(row[f.name])).join(""); }
 
+/* Run one or many statements. Returns the last result that has columns,
+   so a BEGIN/UPDATE/COMMIT block still shows something useful. */
+async function runSQL(sql){
+  const res = await db.exec(sql);
+  let pick = null;
+  for (const r of res) if (r.fields && r.fields.length) pick = r;
+  return pick || res[res.length - 1] || {rows:[], fields:[]};
+}
+
+/* For write exercises: grade the OUTCOME, by running a check query
+   against the database afterwards and comparing it to known-good values. */
+function compareExpected(res, expected){
+  const f = res.fields || [];
+  const got = (res.rows || []).map(r => f.map(x => norm(r[x.name])));
+  if (got.length !== expected.length)
+    return {ok:false, msg:`The check returned ${got.length} row${got.length===1?"":"s"}, expected ${expected.length}. Did every statement run?`};
+  for (let i = 0; i < got.length; i++){
+    for (let j = 0; j < expected[i].length; j++){
+      if (got[i][j] !== norm(expected[i][j])) {
+        const name = f[j] ? f[j].name : ("column " + (j+1));
+        return {ok:false, msg:`<b>${name}</b> came back as <b>${got[i][j]}</b>, but should be <b>${expected[i][j]}</b>.`};
+      }
+    }
+  }
+  return {ok:true};
+}
+
 function compare(userRes, refRes, ordered){
   const uf = userRes.fields, rf = refRes.fields;
   if (uf.length !== rf.length)
@@ -1089,7 +1249,7 @@ async function run(){
   let userRes;
   try {
     await db.exec("SET search_path TO shop, public;");
-    userRes = await db.query(raw);
+    userRes = await runSQL(raw);
   } catch (err) {
     const errHtml = `<div class="verdict err"><span class="mark">✗</span><div>
       <b>PostgreSQL error</b><pre>${esc(err.message || String(err))}</pre>
@@ -1108,11 +1268,16 @@ async function run(){
   const rows = userRes.rows || [];
   const shown = rows.slice(0, 200);
 
-  let html = `<div class="result-head"><span>Result</span>
+  // On a write exercise a bare "executed, no columns" block is just noise —
+  // the Check table below is the informative part.
+  const quiet = e && e.verify && !fields.length;
+
+  let html = quiet ? "" : `<div class="result-head"><span>Result</span>
     <span class="rows">${rows.length} row${rows.length===1?"":"s"} · ${ms} ms</span></div>`;
 
   if (!fields.length) {
-    html += `<div class="verdict note"><span class="mark">·</span><div>Statement executed. It returned no columns — that is normal for INSERT, UPDATE, CREATE and similar.</div></div>`;
+    if (!quiet)
+      html += `<div class="verdict note"><span class="mark">·</span><div>Statement executed. It returned no columns — that is normal for INSERT, UPDATE, CREATE and similar.</div></div>`;
   } else {
     html += `<div class="table-scroll"><table class="grid"><thead><tr>${
       fields.map(f => `<th>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>${
@@ -1125,21 +1290,42 @@ async function run(){
   }
 
   if (e) {
-    let refRes = null;
-    try { refRes = await db.query(e.sol); } catch(err){}
-    if (refRes) {
-      const verdict = compare(userRes, refRes, e.ordered);
-      if (verdict.ok) {
-        state.solved[e.id] = true;
-        const used = state.hints[e.id] || 0;
-        html += `<div class="verdict ok"><span class="mark">✓</span><div>
-          <b>Correct — ${rows.length} row${rows.length===1?"":"s"}, matching the expected result.</b>
-          ${used ? `You used ${used} hint${used===1?"":"s"}; try the next exercise cold.`
-                 : `Solved without hints.`}</div></div>`;
-      } else {
-        html += `<div class="verdict err"><span class="mark">✗</span><div>
-          <b>That runs, but it is not the answer yet.</b><br>${verdict.msg}</div></div>`;
+    let verdict = null;
+
+    if (e.verify) {
+      // WRITE exercise — grade what the database now looks like
+      let vRes = null;
+      try { vRes = await db.query(e.verify); } catch(err){
+        verdict = {ok:false, msg:"The check itself could not run — usually that means a table your statement should have created does not exist yet. Error: " + esc(err.message||String(err))};
       }
+      if (vRes) {
+        verdict = compareExpected(vRes, e.expected);
+        const vf = vRes.fields || [];
+        html += `<div class="result-head"><span>Check</span>
+            <span class="rows">what the database looks like now</span></div>
+          <div class="table-scroll"><table class="grid"><thead><tr>${
+            vf.map(f => `<th>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>${
+            (vRes.rows||[]).map(r => `<tr>${vf.map(f => {
+              const c = cell(r[f.name]); return `<td class="${c.cls}">${esc(c.t)}</td>`;
+            }).join("")}</tr>`).join("")}</tbody></table></div>`;
+      }
+    } else {
+      // READ exercise — compare against the reference solution's result
+      let refRes = null;
+      try { refRes = await db.query(e.sol); } catch(err){}
+      if (refRes) verdict = compare(userRes, refRes, e.ordered);
+    }
+
+    if (verdict && verdict.ok) {
+      state.solved[e.id] = true;
+      const used = state.hints[e.id] || 0;
+      html += `<div class="verdict ok"><span class="mark">✓</span><div>
+        <b>Correct${e.verify ? "" : ` — ${rows.length} row${rows.length===1?"":"s"}, matching the expected result`}.</b>
+        ${used ? `You used ${used} hint${used===1?"":"s"}; try the next exercise cold.`
+               : `Solved without hints.`}</div></div>`;
+    } else if (verdict) {
+      html += `<div class="verdict err"><span class="mark">✗</span><div>
+        <b>${e.verify ? "Not there yet." : "That runs, but it is not the answer yet."}</b><br>${verdict.msg}</div></div>`;
     }
   }
   zone.innerHTML = html;

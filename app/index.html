@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL Study Console</title>
+<style>
+:root {
+  --ground:#EEF2F7; --surface:#FFFFFF; --surface-2:#F5F8FC;
+  --ink:#131C2B; --ink-2:#47576E; --ink-3:#7387A1;
+  --rule:#D6DFEA; --rule-strong:#B9C7D8;
+  --accent:#24557F; --accent-ink:#FFFFFF; --accent-soft:#DCE8F5;
+  --ochre:#A9671B; --ochre-soft:#FBEEDA;
+  --good:#256B4E; --good-soft:#DBF0E5;
+  --bad:#A63A31; --bad-soft:#FBE3E0;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --shadow:0 1px 2px rgba(19,28,43,.06),0 4px 16px rgba(19,28,43,.05);
+  --radius:3px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0C1119; --surface:#141C28; --surface-2:#1A2432;
+  --ink:#DFE7F1; --ink-2:#A3B3C8; --ink-3:#71839B;
+  --rule:#26313F; --rule-strong:#38465A;
+  --accent:#6BA3D6; --accent-ink:#0C1119; --accent-soft:#1C2E42;
+  --ochre:#D69A4E; --ochre-soft:#2A1F14;
+  --good:#5BB68C; --good-soft:#163026;
+  --bad:#E08175; --bad-soft:#37201E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 18px rgba(0,0,0,.3);
+}}
+:root[data-theme="dark"]{
+  --ground:#0C1119; --surface:#141C28; --surface-2:#1A2432;
+  --ink:#DFE7F1; --ink-2:#A3B3C8; --ink-3:#71839B;
+  --rule:#26313F; --rule-strong:#38465A;
+  --accent:#6BA3D6; --accent-ink:#0C1119; --accent-soft:#1C2E42;
+  --ochre:#D69A4E; --ochre-soft:#2A1F14;
+  --good:#5BB68C; --good-soft:#163026;
+  --bad:#E08175; --bad-soft:#37201E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 18px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* boot overlay */
+#boot{position:fixed;inset:0;background:var(--ground);z-index:50;display:flex;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px;text-align:center}
+#boot h1{font-family:var(--mono);font-size:14px;letter-spacing:.14em;text-transform:uppercase;
+  margin:0;color:var(--ink)}
+#boot p{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin:0;max-width:44ch;line-height:1.7}
+.spin{width:22px;height:22px;border:2px solid var(--rule-strong);border-top-color:var(--accent);
+  border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:var(--surface);border-bottom:1px solid var(--rule);padding:9px 20px}
+.topbar .left{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.topbar h1{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;margin:0}
+.topbar .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.status{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:11px;
+  border:1px solid var(--good);color:var(--good);background:var(--good-soft);white-space:nowrap}
+
+.shell{display:grid;grid-template-columns:224px minmax(0,1fr) 300px;min-height:calc(100vh - 44px);align-items:start}
+.rail{border-right:1px solid var(--rule);background:var(--surface);padding:18px 0 40px;
+  position:sticky;top:0;max-height:100vh;overflow-y:auto}
+.progress-block{padding:0 18px 14px}
+.progress-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.progress-label b{color:var(--accent);font-size:12px;font-variant-numeric:tabular-nums}
+.bar{height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.rail-heading{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);padding:12px 18px 6px}
+.week-list{list-style:none;margin:0;padding:0}
+.week-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:7px 18px;border:0;
+  background:none;cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--ink-2);
+  border-left:2px solid transparent}
+.week-item:hover:not(:disabled){background:var(--surface-2);color:var(--ink)}
+.week-item[aria-current="true"]{background:var(--accent-soft);color:var(--accent);
+  border-left-color:var(--accent);font-weight:700}
+.week-item:disabled{color:var(--ink-3);cursor:not-allowed;opacity:.5}
+.week-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.wk-num{font-variant-numeric:tabular-nums;font-size:10.5px;color:var(--ink-3);min-width:15px}
+.week-item[aria-current="true"] .wk-num{color:var(--accent)}
+.wk-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-dot{width:6px;height:6px;border-radius:50%;background:var(--rule-strong);flex-shrink:0}
+.wk-dot.done{background:var(--good)}
+.rail-foot{padding:16px 18px 0;margin-top:12px;border-top:1px solid var(--rule)}
+
+.main{padding:24px 30px 70px;min-width:0}
+.crumb{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:8px}
+.main>h2{font-family:var(--mono);font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0 0 6px;
+  text-wrap:balance}
+.week-blurb{margin:0 0 20px;color:var(--ink-2);font-size:15px;max-width:62ch}
+.ex-tabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap}
+.ex-tab{font-family:var(--mono);font-size:11.5px;padding:5px 11px;cursor:pointer;background:var(--surface);
+  color:var(--ink-2);border:1px solid var(--rule);border-radius:var(--radius);
+  display:inline-flex;align-items:center;gap:6px}
+.ex-tab:hover{border-color:var(--rule-strong);color:var(--ink)}
+.ex-tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.ex-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:16px}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;
+  align-items:center;gap:14px}
+.card-head h3{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;margin:0;color:var(--ink-2)}
+.pill{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;
+  border-radius:10px;background:var(--surface-2);color:var(--ink-3);border:1px solid var(--rule);white-space:nowrap}
+.pill.solved{background:var(--good-soft);color:var(--good);border-color:var(--good);font-weight:700}
+.card-body{padding:15px 18px}
+.question{margin:0;font-size:16.5px;max-width:60ch}
+.question code,.hint-body code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);
+  padding:1px 5px;border-radius:2px;border:1px solid var(--rule)}
+.expect{margin:11px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+
+.editor-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;
+  border-bottom:1px solid var(--rule);background:var(--surface-2);gap:12px;flex-wrap:wrap}
+.editor-bar .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.btn-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:6px 13px;
+  border-radius:var(--radius);cursor:pointer;border:1px solid var(--rule-strong);background:var(--surface);
+  color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.btn:hover:not(:disabled){border-color:var(--ink-3)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.12)}
+.btn.ghost{background:none;border-color:var(--rule);color:var(--ink-2)}
+.btn.tiny{font-size:10.5px;padding:4px 9px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.kbd{font-family:var(--mono);font-size:9.5px;opacity:.7;border:1px solid currentColor;border-radius:2px;padding:0 3px}
+textarea.sql{display:block;width:100%;min-height:150px;padding:14px 16px;border:0;resize:vertical;
+  font-family:var(--mono);font-size:13px;line-height:1.65;background:var(--surface);color:var(--ink);tab-size:2}
+textarea.sql:focus{outline:2px solid var(--accent);outline-offset:-2px}
+textarea.sql::placeholder{color:var(--ink-3)}
+
+.result-head{padding:9px 14px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  background:var(--surface-2);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.result-head .rows{color:var(--ink-2);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.table-scroll{overflow-x:auto;max-height:320px;overflow-y:auto}
+table.grid{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12px}
+table.grid th{position:sticky;top:0;text-align:left;padding:7px 14px;background:var(--surface-2);
+  color:var(--ink-2);font-weight:700;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  border-bottom:1px solid var(--rule-strong);white-space:nowrap}
+table.grid td{padding:6px 14px;border-bottom:1px solid var(--rule);white-space:nowrap}
+table.grid td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.grid td.nul{color:var(--ink-3);font-style:italic}
+table.grid tr:last-child td{border-bottom:0}
+table.grid tbody tr:hover td{background:var(--surface-2)}
+.truncated{padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  border-top:1px dashed var(--rule);background:var(--surface-2)}
+.verdict{padding:12px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;display:flex;gap:10px;
+  align-items:flex-start;border-top:1px solid var(--rule)}
+.verdict .mark{font-weight:700;flex-shrink:0}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.err{background:var(--bad-soft);color:var(--bad)}
+.verdict.note{background:var(--surface-2);color:var(--ink-2)}
+.verdict pre{margin:6px 0 0;white-space:pre-wrap;font-family:var(--mono);font-size:11.5px}
+
+.aside{border-left:1px solid var(--rule);background:var(--surface);padding:18px 0 60px;position:sticky;
+  top:0;max-height:100vh;overflow-y:auto}
+.aside-tabs{display:flex;padding:0 16px;gap:4px;border-bottom:1px solid var(--rule)}
+.aside-tab{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:6px 10px 8px;background:none;
+  border:0;border-bottom:2px solid transparent;color:var(--ink-3);cursor:pointer}
+.aside-tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.aside-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.aside-body{padding:16px}
+.hint{border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:9px;overflow:hidden}
+.hint-btn{width:100%;text-align:left;cursor:pointer;padding:9px 12px;background:var(--surface-2);border:0;
+  font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--ink-2);display:flex;
+  justify-content:space-between;gap:8px;align-items:center}
+.hint-btn:hover:not(:disabled){color:var(--ink)}
+.hint-btn:disabled{opacity:.5;cursor:not-allowed}
+.hint-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hint-btn .lock{color:var(--ochre);font-size:10px}
+.hint-body{padding:11px 12px;font-size:14.5px;color:var(--ink-2);border-top:1px solid var(--rule);background:var(--surface)}
+.hint.open .hint-btn{background:var(--ochre-soft);color:var(--ochre);font-weight:700}
+.gate{margin-top:14px;padding:12px;border:1px dashed var(--rule-strong);border-radius:var(--radius);
+  background:var(--surface-2);font-family:var(--mono);font-size:11.5px;color:var(--ink-3);line-height:1.65}
+.gate b{color:var(--ink-2)}
+.gate pre{white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin:8px 0 0;line-height:1.6}
+.schema-tbl{margin-bottom:14px}
+.schema-tbl h4{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.06em;margin:0 0 5px;color:var(--accent)}
+.schema-tbl ul{list-style:none;margin:0;padding:0}
+.schema-tbl li{font-family:var(--mono);font-size:11px;color:var(--ink-2);padding:2px 0 2px 10px;
+  border-left:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px}
+.schema-tbl li em{color:var(--ink-3);font-style:normal;font-size:10px}
+.schema-note{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.65;
+  border-top:1px solid var(--rule);padding-top:12px}
+.scratch-note{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.6;margin:0 0 10px}
+[hidden]{display:none !important}
+
+@media (max-width:1080px){
+  .shell{grid-template-columns:196px minmax(0,1fr)}
+  .aside{grid-column:1/-1;border-left:0;border-top:1px solid var(--rule);position:static;max-height:none}
+  .aside-body{max-width:720px}
+}
+@media (max-width:720px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule)}
+  .main{padding:20px 16px 50px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="spin"></div>
+  <h1>Starting PostgreSQL</h1>
+  <p id="bootmsg">Downloading the database engine. This happens once — after that it runs from your browser's cache, offline.</p>
+</div>
+
+<div class="topbar">
+  <div class="left">
+    <h1>SQL Study Console</h1>
+    <span class="sub">Nimbus Supply Co.</span>
+  </div>
+  <div class="btn-row">
+    <span class="status" id="pgstatus">connecting…</span>
+    <button class="btn tiny ghost" id="btnscratch" type="button">Scratchpad</button>
+    <button class="btn tiny ghost" id="btnreset" type="button">Reset database</button>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail" aria-label="Course weeks">
+    <div class="progress-block">
+      <div class="progress-label"><span>Progress</span><b id="pct">0%</b></div>
+      <div class="bar"><i id="barfill"></i></div>
+    </div>
+    <div class="rail-heading">Available</div>
+    <ul class="week-list" id="weeklist"></ul>
+    <div class="rail-heading">Written, not yet in the app</div>
+    <ul class="week-list" id="weeklocked"></ul>
+    <div class="rail-foot">
+      <p class="scratch-note">Weeks 5–12 are complete in the repo as markdown. This app covers 1–4 so you can test the format first.</p>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="crumb" id="crumb">Week 1</div>
+    <h2 id="wktitle">Reading data</h2>
+    <p class="week-blurb" id="wkblurb"></p>
+    <div class="ex-tabs" role="tablist" aria-label="Exercises" id="extabs"></div>
+
+    <section class="card">
+      <div class="card-head">
+        <h3 id="exlabel">Exercise 1.1</h3>
+        <span class="pill" id="expill">Not attempted</span>
+      </div>
+      <div class="card-body">
+        <p class="question" id="question"></p>
+        <p class="expect" id="expect"></p>
+      </div>
+      <div class="editor-bar">
+        <span class="lbl" id="editorlbl">Your query</span>
+        <div class="btn-row">
+          <button class="btn ghost" id="btnclear" type="button">Clear</button>
+          <button class="btn primary" id="btnrun" type="button">Run <span class="kbd">⌘↵</span></button>
+        </div>
+      </div>
+      <textarea class="sql" id="sql" spellcheck="false" placeholder="SELECT ..."></textarea>
+      <div id="resultzone"></div>
+    </section>
+  </main>
+
+  <aside class="aside" aria-label="Help">
+    <div class="aside-tabs" role="tablist">
+      <button class="aside-tab" role="tab" aria-selected="true" data-pane="hints">Hints</button>
+      <button class="aside-tab" role="tab" aria-selected="false" data-pane="schema">Schema</button>
+    </div>
+    <div class="aside-body" id="pane-hints">
+      <div id="hintlist"></div>
+      <div class="gate" id="solgate"></div>
+    </div>
+    <div class="aside-body" id="pane-schema" hidden>
+      <div id="schemabox"></div>
+      <p class="schema-note">
+        4 customers have a NULL country. 2 have never ordered.<br>
+        2 products were never sold. 17 orders have no payment;<br>
+        25 have two or more. 12 of 120 orders are cancelled or refunded.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script type="module">
+import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.2.17/dist/index.js';
+
+/* ==========================================================
+   SCHEMA + SEED — identical to db/01_schema.sql and 02_seed.sql
+   ========================================================== */
+const SCHEMA = `
+CREATE SCHEMA IF NOT EXISTS shop;
+SET search_path TO shop, public;
+
+CREATE TABLE employees (
+  employee_id integer PRIMARY KEY, full_name text NOT NULL, job_title text NOT NULL,
+  department text NOT NULL, manager_id integer REFERENCES employees(employee_id),
+  hired_on date NOT NULL, annual_salary numeric(10,2) NOT NULL CHECK (annual_salary > 0));
+
+CREATE TABLE customers (
+  customer_id integer PRIMARY KEY, first_name text NOT NULL, last_name text NOT NULL,
+  email text NOT NULL UNIQUE, country text, city text, signup_date date NOT NULL,
+  segment text NOT NULL DEFAULT 'consumer' CHECK (segment IN ('consumer','business','education')),
+  is_active boolean NOT NULL DEFAULT true);
+
+CREATE TABLE products (
+  product_id integer PRIMARY KEY, sku text NOT NULL UNIQUE, product_name text NOT NULL,
+  category text NOT NULL, unit_price numeric(10,2) NOT NULL CHECK (unit_price >= 0),
+  cost_price numeric(10,2) NOT NULL CHECK (cost_price >= 0),
+  stock_qty integer NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
+  is_discontinued boolean NOT NULL DEFAULT false, created_at date NOT NULL);
+
+CREATE TABLE orders (
+  order_id integer PRIMARY KEY, customer_id integer NOT NULL REFERENCES customers(customer_id),
+  order_date date NOT NULL,
+  status text NOT NULL CHECK (status IN ('completed','shipped','pending','cancelled','refunded')),
+  ship_country text, shipping_fee numeric(10,2) NOT NULL DEFAULT 0 CHECK (shipping_fee >= 0),
+  discount_code text);
+
+CREATE TABLE order_items (
+  order_item_id integer PRIMARY KEY,
+  order_id integer NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+  product_id integer NOT NULL REFERENCES products(product_id),
+  quantity integer NOT NULL CHECK (quantity > 0),
+  unit_price numeric(10,2) NOT NULL CHECK (unit_price >= 0),
+  discount_pct numeric(5,2) NOT NULL DEFAULT 0 CHECK (discount_pct >= 0 AND discount_pct <= 100),
+  UNIQUE (order_id, product_id));
+
+CREATE TABLE payments (
+  payment_id integer PRIMARY KEY,
+  order_id integer NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+  paid_on date NOT NULL, amount numeric(10,2) NOT NULL CHECK (amount > 0),
+  method text NOT NULL CHECK (method IN ('card','paypal','bank_transfer','voucher')),
+  status text NOT NULL DEFAULT 'captured' CHECK (status IN ('captured','failed','refunded')));
+`;
+
+const SEED = `
+SET search_path TO shop, public;
+INSERT INTO employees VALUES
+ (1,'Ana Villaruel','Chief Executive Officer','Executive',NULL,'2019-02-01',185000.00),
+ (2,'Marcus Oyelaran','VP Engineering','Engineering',1,'2019-06-15',152000.00),
+ (3,'Priya Raghunathan','VP Operations','Operations',1,'2020-01-20',148000.00),
+ (4,'Tomas Lindqvist','Senior Engineer','Engineering',2,'2020-09-01',118000.00),
+ (5,'Hannah Boateng','Database Administrator','Engineering',2,'2021-03-11',112000.00),
+ (6,'Kenji Nakamura','Data Engineer','Engineering',2,'2022-07-05',99000.00),
+ (7,'Sofia Marchetti','Warehouse Manager','Operations',3,'2020-11-30',87000.00),
+ (8,'Diego Fuentes','Logistics Coordinator','Operations',7,'2022-02-14',61000.00),
+ (9,'Amara Nwosu','Support Lead','Support',3,'2021-08-23',72000.00),
+ (10,'Lukas Weber','Support Specialist','Support',9,'2023-04-03',54000.00),
+ (11,'Rosa Delgado','Support Specialist','Support',9,'2024-01-08',52000.00),
+ (12,'Ibrahim Chaudhry','Junior Engineer','Engineering',4,'2024-06-17',71000.00);
+
+INSERT INTO customers VALUES
+ (1,'Elena','Sarmiento','elena.sarmiento@example.com','Philippines','Manila','2023-01-14','consumer',true),
+ (2,'Robert','Ashcroft','r.ashcroft@example.com','United Kingdom','Manchester','2023-01-22','business',true),
+ (3,'Yuki','Tanaka','yuki.tanaka@example.com','Japan','Osaka','2023-02-03','consumer',true),
+ (4,'Grace','Okonkwo','grace.okonkwo@example.com','Nigeria','Lagos','2023-02-19','business',true),
+ (5,'Daniel','Brennan','dan.brennan@example.com','Ireland','Cork','2023-03-01','consumer',true),
+ (6,'Meera','Kapoor','meera.kapoor@example.com','India','Pune','2023-03-17','education',true),
+ (7,'Anonymous','User','anon.user7@example.com',NULL,NULL,'2023-03-28','consumer',true),
+ (8,'Carlos','Mendoza','carlos.mendoza@example.com','Mexico','Guadalajara','2023-04-09','business',true),
+ (9,'Ingrid','Halvorsen','ingrid.h@example.com','Norway','Bergen','2023-04-21','consumer',true),
+ (10,'Samuel','Adeyemi','samuel.adeyemi@example.com','Nigeria','Abuja','2023-05-05','business',false),
+ (11,'Chloe','Dubois','chloe.dubois@example.com','France','Lyon','2023-05-18','consumer',true),
+ (12,'Ahmed','Al-Rashid','ahmed.rashid@example.com','UAE','Dubai','2023-06-02','business',true),
+ (13,'Beatriz','Ferreira','bea.ferreira@example.com','Brazil','Recife','2023-06-24','consumer',true),
+ (14,'Nathan','Cole','nathan.cole@example.com','United States','Denver','2023-07-07','consumer',true),
+ (15,'Wei','Zhang','wei.zhang@example.com','Singapore','Singapore','2023-07-19','business',true),
+ (16,'Fatima','Bennani','fatima.bennani@example.com','Morocco','Casablanca','2023-08-02','education',true),
+ (17,'Oliver','Whitfield','oliver.w@example.com','United Kingdom','Bristol','2023-08-15','consumer',true),
+ (18,'Camila','Rojas','camila.rojas@example.com','Chile','Santiago','2023-09-01','consumer',true),
+ (19,'Test','Account','test.account19@example.com',NULL,NULL,'2023-09-12','consumer',false),
+ (20,'Jonas','Bergmann','jonas.bergmann@example.com','Germany','Leipzig','2023-09-26','business',true),
+ (21,'Aisha','Rahman','aisha.rahman@example.com','Bangladesh','Dhaka','2023-10-10','education',true),
+ (22,'Liam','O''Sullivan','liam.osullivan@example.com','Ireland','Galway','2023-10-23','consumer',true),
+ (23,'Sofia','Petrova','sofia.petrova@example.com','Bulgaria','Sofia','2023-11-06','consumer',true),
+ (24,'Marcus','Johansson','marcus.j@example.com','Sweden','Malmo','2023-11-20','business',true),
+ (25,'Ngozi','Eze','ngozi.eze@example.com','Nigeria','Enugu','2023-12-04','consumer',true),
+ (26,'Ryan','Mitchell','ryan.mitchell@example.com','Australia','Perth','2023-12-18','business',true),
+ (27,'Leila','Haddad','leila.haddad@example.com','Lebanon','Beirut','2024-01-08','consumer',true),
+ (28,'Pat','Nolastname','pat.n28@example.com',NULL,'Unknown','2024-01-22','consumer',true),
+ (29,'Hugo','Almeida','hugo.almeida@example.com','Portugal','Porto','2024-02-05','consumer',true),
+ (30,'Sinead','Kavanagh','sinead.k@example.com','Ireland','Dublin','2024-02-19','business',true),
+ (31,'Tariq','Hassan','tariq.hassan@example.com','Egypt','Cairo','2024-03-04','education',true),
+ (32,'Emma','Lindgren','emma.lindgren@example.com','Sweden','Uppsala','2024-03-18','consumer',true),
+ (33,'Jane','Doe','jane.doe33@example.com',NULL,NULL,'2024-04-01','consumer',false),
+ (34,'Andres','Guzman','andres.guzman@example.com','Colombia','Medellin','2024-04-15','business',true),
+ (35,'Nadia','Iqbal','nadia.iqbal@example.com','Pakistan','Lahore','2024-05-06','consumer',true),
+ (36,'Thomas','Bergeron','thomas.bergeron@example.com','Canada','Quebec City','2024-05-20','consumer',true),
+ (37,'Zainab','Osei','zainab.osei@example.com','Ghana','Accra','2024-06-03','education',true),
+ (38,'Victor','Ivanov','victor.ivanov@example.com','Estonia','Tallinn','2024-06-17','business',true),
+ (39,'Harriet','Lockwood','harriet.lockwood@example.com','United Kingdom','Leeds','2025-11-24','consumer',true),
+ (40,'Kwame','Mensah','kwame.mensah@example.com','Ghana','Kumasi','2025-12-02','consumer',true);
+
+INSERT INTO products VALUES
+ (1,'NW-RTR-1000','Nimbus Router 1000','Networking',189.00,102.50,120,false,'2022-11-01'),
+ (2,'NW-RTR-2000','Nimbus Router 2000 Pro','Networking',349.00,198.00,64,false,'2023-04-12'),
+ (3,'NW-SWT-8','8-Port Gigabit Switch','Networking',79.50,41.00,210,false,'2022-11-01'),
+ (4,'NW-SWT-24','24-Port Managed Switch','Networking',429.00,256.00,33,false,'2023-01-18'),
+ (5,'NW-APT-300','Ceiling Access Point 300','Networking',159.00,88.00,95,false,'2023-06-02'),
+ (6,'ST-SSD-500','Rapid SSD 500GB','Storage',64.00,35.50,340,false,'2022-11-01'),
+ (7,'ST-SSD-1TB','Rapid SSD 1TB','Storage',109.00,61.00,285,false,'2022-11-01'),
+ (8,'ST-SSD-2TB','Rapid SSD 2TB','Storage',198.00,118.00,140,false,'2023-02-20'),
+ (9,'ST-NAS-4B','Vault NAS 4-Bay','Storage',529.00,322.00,22,false,'2023-05-09'),
+ (10,'ST-HDD-4TB','Archive HDD 4TB','Storage',89.00,52.00,175,false,'2022-11-01'),
+ (11,'PR-KBD-MEC','Mechanical Keyboard MK2','Peripherals',119.00,58.00,260,false,'2023-03-15'),
+ (12,'PR-MSE-ERG','Ergonomic Mouse E1','Peripherals',49.00,21.00,410,false,'2022-11-01'),
+ (13,'PR-MON-27','27" QHD Monitor','Peripherals',289.00,176.00,58,false,'2023-07-21'),
+ (14,'PR-DOK-USB','USB-C Dock 11-in-1','Peripherals',139.00,74.00,130,false,'2023-08-30'),
+ (15,'PR-HDS-BT','Bluetooth Headset H5','Peripherals',89.00,43.00,190,false,'2023-09-14'),
+ (16,'CB-ETH-C6','Cat6 Cable 3m (10-pack)','Cables',34.00,14.00,520,false,'2022-11-01'),
+ (17,'CB-USB-C2','USB-C to USB-C 2m','Cables',17.50,6.20,780,false,'2022-11-01'),
+ (18,'CB-HDM-21','HDMI 2.1 Cable 2m','Cables',24.00,9.50,445,false,'2023-02-02'),
+ (19,'PW-UPS-650','UPS 650VA','Power',129.00,77.00,88,false,'2023-04-27'),
+ (20,'PW-PDU-8','Rack PDU 8-Outlet','Power',219.00,131.00,41,false,'2023-10-05'),
+ (21,'PW-SRG-6','Surge Protector 6-Way','Power',32.00,13.00,300,false,'2022-11-01'),
+ (22,'SW-BAK-1Y','Nimbus Backup 1-Year','Software',149.00,30.00,0,false,'2023-01-05'),
+ (23,'SW-MON-1Y','Nimbus Monitor 1-Year','Software',199.00,40.00,0,false,'2023-01-05'),
+ (24,'NW-RTR-500','Nimbus Router 500 (EOL)','Networking',99.00,61.00,6,true,'2021-05-10'),
+ (25,'PR-WBC-720','Webcam 720p (EOL)','Peripherals',39.00,24.00,14,true,'2021-08-22');
+
+INSERT INTO orders (order_id, customer_id, order_date, status, ship_country, shipping_fee, discount_code)
+SELECT n,
+  CASE WHEN n % 3 = 0 THEN 1 + (n % 8) ELSE 1 + ((n * 7) % 38) END,
+  DATE '2024-01-01' + ((n * 5 + (n % 7) * 11) % 700),
+  CASE WHEN n % 17 = 0 THEN 'cancelled' WHEN n % 23 = 0 THEN 'refunded'
+       WHEN n % 11 = 0 THEN 'pending' WHEN n % 5 = 0 THEN 'shipped' ELSE 'completed' END,
+  NULL,
+  CASE WHEN n % 4 = 0 THEN 0.00 ELSE ROUND((5 + (n % 9) * 1.5)::numeric, 2) END,
+  CASE WHEN n % 6 = 0 THEN 'SAVE10' WHEN n % 13 = 0 THEN 'WELCOME'
+       WHEN n % 19 = 0 THEN 'FREESHIP' ELSE NULL END
+FROM generate_series(1,120) AS n;
+
+UPDATE orders o SET ship_country = c.country FROM customers c WHERE c.customer_id = o.customer_id;
+
+INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price, discount_pct)
+SELECT ROW_NUMBER() OVER (ORDER BY o.order_id, i), o.order_id, p.product_id,
+       1 + ((o.order_id + i) % 5), p.unit_price,
+       CASE WHEN (o.order_id + i) % 9 = 0 THEN 10.00
+            WHEN (o.order_id + i) % 17 = 0 THEN 25.00 ELSE 0.00 END
+FROM orders o
+CROSS JOIN LATERAL generate_series(1, 1 + (o.order_id % 4)) AS i
+JOIN products p ON p.product_id = 1 + ((o.order_id * 3 + i * 7) % 23);
+
+WITH order_totals AS (
+  SELECT o.order_id, o.order_date, o.status,
+         ROUND(SUM(oi.quantity*oi.unit_price*(1-oi.discount_pct/100)) + MAX(o.shipping_fee),2) AS total
+  FROM orders o JOIN order_items oi ON oi.order_id=o.order_id
+  GROUP BY o.order_id, o.order_date, o.status, o.shipping_fee),
+rules AS (
+  SELECT order_id, order_date+1 AS paid_on, total AS amount, 'captured' AS status, 1 AS seq
+  FROM order_totals WHERE status IN ('completed','shipped','refunded') AND order_id % 9 <> 0
+  UNION ALL SELECT order_id, order_date+1, ROUND(total*0.60,2), 'captured', 1
+  FROM order_totals WHERE status IN ('completed','shipped','refunded') AND order_id % 9 = 0
+  UNION ALL SELECT order_id, order_date+31, ROUND(total*0.40,2), 'captured', 2
+  FROM order_totals WHERE status IN ('completed','shipped','refunded') AND order_id % 9 = 0
+  UNION ALL SELECT order_id, order_date+21, total, 'refunded', 3
+  FROM order_totals WHERE status = 'refunded'
+  UNION ALL SELECT order_id, order_date, total, 'failed', 0
+  FROM order_totals WHERE status IN ('completed','shipped') AND order_id % 14 = 0)
+INSERT INTO payments (payment_id, order_id, paid_on, amount, method, status)
+SELECT ROW_NUMBER() OVER (ORDER BY order_id, seq), order_id, paid_on, amount,
+  CASE (order_id+seq) % 4 WHEN 0 THEN 'card' WHEN 1 THEN 'paypal' WHEN 2 THEN 'card'
+       ELSE 'bank_transfer' END, status
+FROM rules;
+`;
+
+/* ==========================================================
+   COURSE CONTENT — weeks 1-4
+   ========================================================== */
+const WEEKS = [
+  {n:1, name:"Reading data", blurb:"SELECT, WHERE, ORDER BY and LIMIT. By the end of this week you can pull any subset of rows and columns out of a single table, in any order you like."},
+  {n:2, name:"Filtering properly", blurb:"AND/OR precedence, IN, BETWEEN, LIKE — and the week where NULL stops being intuitive and starts being understood."},
+  {n:3, name:"Aggregation", blurb:"COUNT, SUM, AVG, GROUP BY and HAVING. Where SQL stops being a way to look things up and starts being a way to answer questions."},
+  {n:4, name:"Joins I", blurb:"Keys, INNER JOIN and LEFT JOIN. Real questions rarely fit in one table — this week you put them back together."}
+];
+const LOCKED = ["Joins II & fan-out","Subqueries & CTEs","Window functions","Types & cleaning","Schema design","Writing data","Indexes","Views & capstone"];
+
+const EX = {
+1:[
+ {id:"1.1", title:"Exercise 1.1", ordered:true,
+  q:"List every product in the <code>Storage</code> category, showing only the product name and unit price, most expensive first.",
+  expect:"Expected: 5 rows",
+  sol:"SELECT product_name,\n       unit_price\nFROM   products\nWHERE  category = 'Storage'\nORDER  BY unit_price DESC;",
+  hints:["You only need one table. Which one holds product names, categories and prices?",
+   "Text comparison is case-sensitive. The stored value is <code>'Storage'</code> with a capital S — <code>'storage'</code> returns zero rows, which looks exactly like 'no data exists'.",
+   "Structure: <code>SELECT</code> two columns, <code>FROM products</code>, <code>WHERE category = 'Storage'</code>, then <code>ORDER BY unit_price DESC</code>."]},
+ {id:"1.2", title:"Exercise 1.2", ordered:true,
+  q:"Show product name, category and unit price for every product that is <b>not</b> discontinued. Sort by category A–Z, and within each category by price, highest first.",
+  expect:"Expected: 23 rows · check both sorts actually apply",
+  sol:"SELECT product_name,\n       category,\n       unit_price\nFROM   products\nWHERE  NOT is_discontinued\nORDER  BY category ASC,\n          unit_price DESC;",
+  hints:["A boolean column is already true or false. You don't need to compare it to anything — <code>WHERE NOT is_discontinued</code> is enough.",
+   "<code>ORDER BY</code> takes a list. The first column groups the output; the second sorts within each group.",
+   "Each column gets its own direction: <code>ORDER BY category ASC, unit_price DESC</code>. Swap the terms and re-run to see how differently the same 23 rows read."]},
+ {id:"1.3", title:"Exercise 1.3", ordered:true,
+  q:"For every product show the name, unit price, cost price, and a calculated column called <code>margin</code> (unit price minus cost price). Return only products with a margin above $100, highest margin first.",
+  expect:"Expected: 6 rows · you will probably hit an error first — that's the point",
+  sol:"SELECT product_name,\n       unit_price,\n       cost_price,\n       unit_price - cost_price AS margin\nFROM   products\nWHERE  unit_price - cost_price > 100\nORDER  BY margin DESC;",
+  hints:["You can do arithmetic directly in the SELECT list, and name the result with <code>AS</code>.",
+   "Try <code>WHERE margin > 100</code> first and read the error. The database evaluates WHERE <i>before</i> SELECT, so the alias doesn't exist yet when WHERE needs it.",
+   "Repeat the expression instead of the alias: <code>WHERE unit_price - cost_price > 100</code>. Oddly, <code>ORDER BY margin DESC</code> <i>is</i> fine — ORDER BY runs after SELECT."]}
+],
+2:[
+ {id:"2.1", title:"Exercise 2.1", ordered:true,
+  q:"List first name, last name, country and city of every customer in Ireland, the United Kingdom, or Germany. Sort by country, then last name.",
+  expect:"Expected: 7 rows",
+  sol:"SELECT first_name,\n       last_name,\n       country,\n       city\nFROM   customers\nWHERE  country IN ('Ireland', 'United Kingdom', 'Germany')\nORDER  BY country, last_name;",
+  hints:["Three <code>OR</code> conditions on the same column can be written far more readably.",
+   "<code>IN</code> takes a bracketed list: <code>country IN ('a', 'b', 'c')</code>.",
+   "<code>WHERE country IN ('Ireland', 'United Kingdom', 'Germany')</code>, then <code>ORDER BY country, last_name</code>."]},
+ {id:"2.2", title:"Exercise 2.2", ordered:true,
+  q:"Find every product priced between $50 and $150 inclusive that is <b>not</b> discontinued. Show name, category and price, cheapest first.",
+  expect:"Expected: 9 rows · dropping the discontinued filter gives 10",
+  sol:"SELECT product_name,\n       category,\n       unit_price\nFROM   products\nWHERE  unit_price BETWEEN 50 AND 150\n  AND  NOT is_discontinued\nORDER  BY unit_price;",
+  hints:["<code>BETWEEN</code> is inclusive at both ends — it means <code>&gt;= 50 AND &lt;= 150</code>.",
+   "You need two conditions joined with <code>AND</code>: the price range, and the discontinued check.",
+   "The Ergonomic Mouse at $49.00 is excluded — one dollar below the range. The Nimbus Router 500 at $99.00 is in range but discontinued, and is the difference between 9 rows and 10."]},
+ {id:"2.3", title:"Exercise 2.3", ordered:false,
+  q:"Count every customer who is <b>not</b> in Nigeria — including those whose country was never recorded. There are 40 customers and 3 are Nigerian, so you are looking for 37.",
+  expect:"Expected: 37 · the naive query returns 33",
+  sol:"SELECT count(*) AS not_nigeria\nFROM   customers\nWHERE  country <> 'Nigeria'\n   OR  country IS NULL;",
+  hints:["Write it the obvious way first: <code>WHERE country &lt;&gt; 'Nigeria'</code>. You'll get 33. Four customers went missing — find out who.",
+   "Four customers have <code>NULL</code> in country. NULL means <i>unknown</i>, and SQL cannot say whether an unknown country differs from Nigeria — so the comparison returns NULL, not true, and WHERE drops the row.",
+   "You cannot test with <code>= NULL</code>. Use <code>IS NULL</code>: add <code>OR country IS NULL</code>. Postgres also offers <code>country IS DISTINCT FROM 'Nigeria'</code>."]}
+],
+3:[
+ {id:"3.1", title:"Exercise 3.1", ordered:true,
+  q:"Count how many products are in each category, including discontinued ones. Show category and count, biggest category first.",
+  expect:"Expected: 6 rows totalling 25",
+  sol:"SELECT   category,\n         count(*) AS products\nFROM     products\nGROUP BY category\nORDER BY products DESC, category;",
+  hints:["<code>GROUP BY</code> sorts rows into piles, then runs the aggregate once per pile.",
+   "Every column in SELECT must either be in the GROUP BY or inside an aggregate function.",
+   "Networking and Peripherals tie at 6. Without a tiebreaker the order between them is not guaranteed — <code>ORDER BY products DESC, category</code> makes it stable."]},
+ {id:"3.2", title:"Exercise 3.2", ordered:true,
+  q:"Count orders by status. Show status and count, most common first. Then check the counts sum to 120.",
+  expect:"Expected: 5 rows summing to 120",
+  sol:"SELECT   status,\n         count(*) AS orders\nFROM     orders\nGROUP BY status\nORDER BY orders DESC;",
+  hints:["Same shape as 3.1, different table and column.",
+   "After running it, add the counts up. They should equal <code>SELECT count(*) FROM orders</code>.",
+   "Note what this tells you for later: cancelled + refunded is 12 orders, 10% of the table. Any revenue query forgetting to exclude them overstates income by about that much."]},
+ {id:"3.3", title:"Exercise 3.3", ordered:true,
+  q:"For products that are <b>not discontinued</b>, show each category's product count and average price — but only for categories with <b>3 or more</b> products. Sort by average price, highest first.",
+  expect:"Expected: 5 rows, not 6 · one category is excluded",
+  sol:"SELECT   category,\n         count(*)                  AS products,\n         round(avg(unit_price), 2) AS avg_price\nFROM     products\nWHERE    NOT is_discontinued\nGROUP BY category\nHAVING   count(*) >= 3\nORDER BY avg_price DESC;",
+  hints:["Two filters doing different jobs. One is about a single row; the other is about a whole group.",
+   "<code>WHERE</code> runs before grouping and cannot see aggregates. <code>HAVING</code> runs after and can.",
+   "Software is the missing sixth row — only 2 live products, so <code>HAVING count(*) &gt;= 3</code> removes the whole group. Its average price of 174.00 would have placed it third."]}
+],
+4:[
+ {id:"4.1", title:"Exercise 4.1", ordered:true,
+  q:"List every order with the customer's first name, last name and country. Show <code>order_id</code>, <code>order_date</code>, <code>status</code>, then the three customer columns. Sort by <code>order_id</code>.",
+  expect:"Expected: 120 rows — the same as the number of orders",
+  sol:"SELECT o.order_id,\n       o.order_date,\n       o.status,\n       c.first_name,\n       c.last_name,\n       c.country\nFROM   orders o\nJOIN   customers c ON c.customer_id = o.customer_id\nORDER  BY o.order_id;",
+  hints:["Give each table a short alias — <code>orders o</code>, <code>customers c</code> — then qualify every column with it.",
+   "The join condition links the foreign key to the primary key: <code>ON c.customer_id = o.customer_id</code>.",
+   "Both tables have a <code>customer_id</code> column, so an unqualified reference is ambiguous and Postgres will reject it. That error is the database making you be precise."]},
+ {id:"4.2", title:"Exercise 4.2", ordered:true,
+  q:"List <b>every</b> customer with the number of orders they have placed, including those who have placed none. Show first name, last name and <code>orders</code>, most orders first.",
+  expect:"Expected: 40 rows, exactly two showing 0 · if your zeros show as 1, you hit the count(*) trap",
+  sol:"SELECT    c.first_name,\n          c.last_name,\n          count(o.order_id) AS orders\nFROM      customers c\nLEFT JOIN orders o ON o.customer_id = c.customer_id\nGROUP BY  c.customer_id, c.first_name, c.last_name\nORDER BY  orders DESC, c.last_name;",
+  hints:["An <code>INNER JOIN</code> returns 38 rows — it silently drops the two customers with no orders. You need <code>LEFT JOIN</code>.",
+   "Try it with <code>count(*)</code> first. Harriet and Kwame will show 1 order each, though they have none. Work out where that 1 comes from.",
+   "<code>count(*)</code> counts ROWS, and after a LEFT JOIN Harriet still occupies one row — her details plus NULLs. Count a right-table column instead: <code>count(o.order_id)</code>, because <code>count(column)</code> skips NULLs."]},
+ {id:"4.3", title:"Exercise 4.3", ordered:true,
+  q:"List every order line with its product name and category. Show <code>order_id</code>, <code>product_name</code>, <code>category</code>, <code>quantity</code> and the line's <code>unit_price</code>. Sort by <code>order_id</code>, then <code>product_name</code>.",
+  expect:"Expected: 300 rows · both tables have a unit_price — pick the right one",
+  sol:"SELECT oi.order_id,\n       p.product_name,\n       p.category,\n       oi.quantity,\n       oi.unit_price\nFROM   order_items oi\nJOIN   products p ON p.product_id = oi.product_id\nORDER  BY oi.order_id, p.product_name;",
+  hints:["Join <code>order_items</code> to <code>products</code> on <code>product_id</code>.",
+   "Writing bare <code>unit_price</code> gives <code>column reference &quot;unit_price&quot; is ambiguous</code>. You must choose which table's you mean.",
+   "Use <code>oi.unit_price</code> — the price at the time of sale. <code>p.unit_price</code> is today's price, and using it for historical revenue means last year's totals change whenever someone edits a price."]}
+]};
+
+const SCHEMA_REF = [
+ ["products",["product_id int PK","sku text","product_name text","category text","unit_price numeric","cost_price numeric","stock_qty int","is_discontinued bool"]],
+ ["customers",["customer_id int PK","first_name text","last_name text","email text","country text NULL","city text NULL","signup_date date","segment text","is_active bool"]],
+ ["orders",["order_id int PK","customer_id int FK","order_date date","status text","ship_country text NULL","shipping_fee numeric","discount_code text NULL"]],
+ ["order_items",["order_item_id int PK","order_id int FK","product_id int FK","quantity int","unit_price numeric","discount_pct numeric"]],
+ ["payments",["payment_id int PK","order_id int FK","paid_on date","amount numeric","method text","status text"]],
+ ["employees",["employee_id int PK","full_name text","job_title text","department text","manager_id int FK self","hired_on date","annual_salary numeric"]]
+];
+
+/* ==========================================================
+   STATE
+   ========================================================== */
+const KEY = "sqlconsole.v1";
+let state = {week:1, ex:0, solved:{}, drafts:{}, hints:{}, ran:{}, scratch:""};
+try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch(e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} };
+const $ = id => document.getElementById(id);
+let scratchMode = false;
+const cur = () => EX[state.week][state.ex];
+let db = null;
+
+/* ==========================================================
+   BOOT
+   ========================================================== */
+async function boot(){
+  try {
+    $("bootmsg").textContent = "Downloading the PostgreSQL engine (about 3 MB). This happens once — afterwards it loads from cache and works offline.";
+    db = new PGlite('idb://nimbus-sql-practice');
+    await db.waitReady;
+
+    const has = await db.query(
+      "SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='shop'");
+    if (!has.rows[0].n) {
+      $("bootmsg").textContent = "Building your practice database…";
+      await seed();
+    }
+    $("pgstatus").textContent = "postgres ready";
+    $("boot").hidden = true;
+    // Exposed deliberately: lets you query the database straight from the
+    // browser console — await __db.query('select 1') — and makes the app
+    // testable. Nothing here is secret; the whole database is on your machine.
+    window.__db = db; window.__EX = EX;
+    renderAll();
+  } catch (err) {
+    $("boot").innerHTML =
+      '<h1 style="color:var(--bad)">Could not start</h1>' +
+      '<p>' + String(err && err.message || err) + '</p>' +
+      '<p>Try a hard refresh. If it persists, your browser may be blocking WebAssembly or IndexedDB — private-browsing windows often do.</p>';
+  }
+}
+async function seed(){
+  await db.exec(SCHEMA);
+  await db.exec(SEED);
+}
+async function resetDb(){
+  if (!confirm("Rebuild the practice database from scratch?\n\nYour saved answers and progress are kept. Only the data is reset.")) return;
+  $("boot").hidden = false;
+  $("boot").innerHTML = '<div class="spin"></div><h1>Rebuilding</h1><p>Dropping and reloading the practice data…</p>';
+  try {
+    await db.exec("DROP SCHEMA IF EXISTS shop CASCADE;");
+    await seed();
+    $("boot").hidden = true;
+    renderEx();
+  } catch(e){ alert("Reset failed: " + e.message); $("boot").hidden = true; }
+}
+
+/* ==========================================================
+   RENDER
+   ========================================================== */
+function renderRail(){
+  $("weeklist").innerHTML = WEEKS.map(w => {
+    const done = EX[w.n].every(e => state.solved[e.id]);
+    return `<li><button class="week-item" data-week="${w.n}" aria-current="${w.n===state.week}">
+      <span class="wk-num">${String(w.n).padStart(2,"0")}</span>
+      <span class="wk-name">${w.name}</span>
+      <span class="wk-dot ${done?"done":""}"></span></button></li>`;
+  }).join("");
+  $("weeklocked").innerHTML = LOCKED.map((nm,i) =>
+    `<li><button class="week-item" disabled>
+      <span class="wk-num">${String(i+5).padStart(2,"0")}</span>
+      <span class="wk-name">${nm}</span></button></li>`).join("");
+
+  const all = Object.values(EX).flat();
+  const done = all.filter(e => state.solved[e.id]).length;
+  const pct = Math.round(done/all.length*100);
+  $("pct").textContent = pct + "%";
+  $("barfill").style.width = pct + "%";
+  document.querySelectorAll("[data-week]").forEach(b =>
+    b.onclick = () => { scratchMode=false; state.week=+b.dataset.week; state.ex=0; save(); renderAll(); });
+}
+
+function renderEx(){
+  if (scratchMode) return renderScratch();
+  const w = WEEKS.find(x => x.n === state.week);
+  $("crumb").textContent = "Week " + state.week;
+  $("wktitle").textContent = w.name;
+  $("wkblurb").textContent = w.blurb;
+  $("extabs").hidden = false;
+  $("extabs").innerHTML = EX[state.week].map((e,i) =>
+    `<button class="ex-tab" role="tab" aria-selected="${i===state.ex}" data-ex="${i}">
+      ${e.title}${state.solved[e.id]?' <span class="tick">✓</span>':""}</button>`).join("");
+  document.querySelectorAll("[data-ex]").forEach(b =>
+    b.onclick = () => { state.ex=+b.dataset.ex; save(); renderEx(); });
+
+  const e = cur();
+  $("exlabel").textContent = e.title;
+  $("question").innerHTML = e.q;
+  $("expect").textContent = e.expect;
+  $("editorlbl").textContent = "Your query";
+  const pill = $("expill");
+  if (state.solved[e.id]) { pill.textContent="Solved"; pill.className="pill solved"; }
+  else if (state.ran[e.id]) { pill.textContent="Attempted"; pill.className="pill"; }
+  else { pill.textContent="Not attempted"; pill.className="pill"; }
+  $("sql").value = state.drafts[e.id] || "";
+  $("resultzone").innerHTML = "";
+  $("pane-hints").hidden = false;
+  renderHints();
+}
+
+function renderScratch(){
+  $("crumb").textContent = "Scratchpad";
+  $("wktitle").textContent = "Free SQL";
+  $("wkblurb").textContent = "Run anything you like against the practice database. Nothing here is checked or graded — it is for exploring, testing an idea, or looking at a table before you write a query.";
+  $("extabs").hidden = true;
+  $("exlabel").textContent = "Scratchpad";
+  $("question").innerHTML = "No exercise. Type any SQL and run it. <code>SELECT * FROM products LIMIT 5;</code> is a good start.";
+  $("expect").textContent = "The shop schema is already on the search path — you can write products rather than shop.products.";
+  $("editorlbl").textContent = "Free query";
+  $("expill").textContent = "Sandbox"; $("expill").className = "pill";
+  $("sql").value = state.scratch || "";
+  $("resultzone").innerHTML = "";
+  $("pane-hints").hidden = true;
+  document.querySelectorAll(".aside-tab").forEach(t => {
+    const isSchema = t.dataset.pane === "schema";
+    t.setAttribute("aria-selected", isSchema);
+  });
+  $("pane-schema").hidden = false;
+}
+
+function renderHints(){
+  const e = cur();
+  const shown = state.hints[e.id] || 0;
+  $("hintlist").innerHTML = e.hints.map((h,i) => {
+    const open = i < shown, avail = i <= shown;
+    return `<div class="hint ${open?"open":""}">
+      <button class="hint-btn" data-hint="${i}" ${avail?"":"disabled"}>
+        <span>Hint ${i+1}${i===e.hints.length-1?" — nearly the answer":""}</span>
+        <span class="lock">${open?"−":(avail?"+":"·")}</span></button>
+      ${open?`<div class="hint-body">${h}</div>`:""}</div>`;
+  }).join("");
+  document.querySelectorAll("[data-hint]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.hint;
+    state.hints[e.id] = (i < (state.hints[e.id]||0)) ? i : i+1;
+    save(); renderHints();
+  });
+
+  const gate = $("solgate");
+  if (state.ran[e.id]) {
+    gate.innerHTML = `<b>Solution unlocked.</b> You have made an attempt, so you have earned it.
+      Compare it with what you wrote — the difference is the lesson.
+      <br><br><button class="btn ghost tiny" id="btnsol" type="button">Show solution</button>`;
+    $("btnsol").onclick = () => {
+      gate.innerHTML = `<b>Solution</b><pre>${esc(cur().sol)}</pre>`;
+    };
+  } else {
+    gate.innerHTML = `<b>Solution locked.</b> Run a query first — even a wrong one.
+      Reading a correct query feels like learning and is not; writing a broken one and
+      repairing it is what actually builds the skill.`;
+  }
+}
+
+function renderSchema(){
+  $("schemabox").innerHTML = SCHEMA_REF.map(([t,cols]) =>
+    `<div class="schema-tbl"><h4>${t}</h4><ul>${cols.map(c=>{
+      const parts = c.split(" ");
+      return `<li><span>${parts[0]}</span><em>${parts.slice(1).join(" ")}</em></li>`;
+    }).join("")}</ul></div>`).join("");
+}
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* ==========================================================
+   RUN + CHECK
+   ========================================================== */
+function cell(v){
+  if (v === null || v === undefined) return {t:"NULL", cls:"nul"};
+  if (v instanceof Date) return {t:v.toISOString().slice(0,10), cls:""};
+  if (typeof v === "number") return {t:String(v), cls:"num"};
+  if (typeof v === "boolean") return {t:String(v), cls:""};
+  const s = String(v);
+  return {t:s, cls:(s !== "" && !isNaN(Number(s))) ? "num" : ""};
+}
+function norm(v){
+  if (v === null || v === undefined) return " NULL";
+  if (v instanceof Date) return v.toISOString().slice(0,10);
+  const s = String(v).trim();
+  const n = Number(s);
+  return (s !== "" && !isNaN(n)) ? String(Math.round(n*1e6)/1e6) : s;
+}
+function rowKey(row, fields){ return fields.map(f => norm(row[f.name])).join(""); }
+
+function compare(userRes, refRes, ordered){
+  const uf = userRes.fields, rf = refRes.fields;
+  if (uf.length !== rf.length)
+    return {ok:false, msg:`Your result has ${uf.length} column${uf.length===1?"":"s"}; the answer needs ${rf.length}. Check exactly which columns the exercise asks for.`};
+  if (userRes.rows.length !== refRes.rows.length)
+    return {ok:false, msg:`Your query returned ${userRes.rows.length} row${userRes.rows.length===1?"":"s"}; the answer has ${refRes.rows.length}. A row count that is too high usually means a missing filter; too low usually means a filter that is too strict, or NULLs being dropped.`};
+
+  const u = userRes.rows.map(r => rowKey(r, uf));
+  const r = refRes.rows.map(x => rowKey(x, rf));
+  const inOrder = u.every((v,i) => v === r[i]);
+  if (inOrder) return {ok:true};
+
+  const su = [...u].sort(), sr = [...r].sort();
+  if (su.every((v,i) => v === sr[i])) {
+    if (!ordered) return {ok:true};
+    return {ok:false, msg:"Right rows, wrong order. Your data is correct but the sort is not what the exercise asked for — check your ORDER BY, including the direction of each column."};
+  }
+  return {ok:false, msg:"Right number of rows, but the values do not match. Check you selected the columns the exercise asked for, in the order it asked for them, and that any calculation is right."};
+}
+
+async function run(){
+  const raw = $("sql").value;
+  const zone = $("resultzone");
+
+  if (scratchMode) { state.scratch = raw; save(); }
+
+  if (!raw.trim()) {
+    zone.innerHTML = `<div class="verdict note"><span class="mark">·</span><div>Nothing to run yet. Write a query above, then press Run.</div></div>`;
+    return;
+  }
+
+  const e = scratchMode ? null : cur();
+  if (e) { state.drafts[e.id] = raw; state.ran[e.id] = true; }
+
+  $("btnrun").disabled = true;
+  const t0 = performance.now();
+  let userRes;
+  try {
+    await db.exec("SET search_path TO shop, public;");
+    userRes = await db.query(raw);
+  } catch (err) {
+    const errHtml = `<div class="verdict err"><span class="mark">✗</span><div>
+      <b>PostgreSQL error</b><pre>${esc(err.message || String(err))}</pre>
+      Read it carefully — Postgres errors are unusually precise, and the fix is
+      nearly always named in the message.</div></div>`;
+    $("btnrun").disabled = false; save();
+    // renderEx() repaints the card (and clears this pane), so restore after it
+    if (e) { renderRail(); renderEx(); }
+    zone.innerHTML = errHtml;
+    return;
+  }
+  const ms = Math.max(1, Math.round(performance.now() - t0));
+  $("btnrun").disabled = false;
+
+  const fields = userRes.fields || [];
+  const rows = userRes.rows || [];
+  const shown = rows.slice(0, 200);
+
+  let html = `<div class="result-head"><span>Result</span>
+    <span class="rows">${rows.length} row${rows.length===1?"":"s"} · ${ms} ms</span></div>`;
+
+  if (!fields.length) {
+    html += `<div class="verdict note"><span class="mark">·</span><div>Statement executed. It returned no columns — that is normal for INSERT, UPDATE, CREATE and similar.</div></div>`;
+  } else {
+    html += `<div class="table-scroll"><table class="grid"><thead><tr>${
+      fields.map(f => `<th>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>${
+      shown.map(r => `<tr>${fields.map(f => {
+        const c = cell(r[f.name]);
+        return `<td class="${c.cls}">${esc(c.t)}</td>`;
+      }).join("")}</tr>`).join("")}</tbody></table></div>`;
+    if (rows.length > shown.length)
+      html += `<div class="truncated">Showing the first ${shown.length} of ${rows.length} rows.</div>`;
+  }
+
+  if (e) {
+    let refRes = null;
+    try { refRes = await db.query(e.sol); } catch(err){}
+    if (refRes) {
+      const verdict = compare(userRes, refRes, e.ordered);
+      if (verdict.ok) {
+        state.solved[e.id] = true;
+        const used = state.hints[e.id] || 0;
+        html += `<div class="verdict ok"><span class="mark">✓</span><div>
+          <b>Correct — ${rows.length} row${rows.length===1?"":"s"}, matching the expected result.</b>
+          ${used ? `You used ${used} hint${used===1?"":"s"}; try the next exercise cold.`
+                 : `Solved without hints.`}</div></div>`;
+      } else {
+        html += `<div class="verdict err"><span class="mark">✗</span><div>
+          <b>That runs, but it is not the answer yet.</b><br>${verdict.msg}</div></div>`;
+      }
+    }
+  }
+  zone.innerHTML = html;
+  save();
+  if (e) { renderRail(); renderEx(); zone.innerHTML = html; }
+}
+
+/* ==========================================================
+   WIRING
+   ========================================================== */
+function renderAll(){ renderRail(); renderSchema(); renderEx(); }
+
+$("btnrun").onclick = run;
+$("btnclear").onclick = () => {
+  $("sql").value = "";
+  if (scratchMode) state.scratch = ""; else delete state.drafts[cur().id];
+  $("resultzone").innerHTML = ""; save();
+};
+$("btnreset").onclick = resetDb;
+$("btnscratch").onclick = () => { scratchMode = !scratchMode; renderEx(); };
+$("sql").addEventListener("input", ev => {
+  if (scratchMode) state.scratch = ev.target.value; else state.drafts[cur().id] = ev.target.value;
+  save();
+});
+$("sql").addEventListener("keydown", ev => {
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "Enter") { ev.preventDefault(); run(); }
+});
+document.querySelectorAll(".aside-tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".aside-tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  $("pane-hints").hidden  = t.dataset.pane !== "hints" || scratchMode;
+  $("pane-schema").hidden = t.dataset.pane !== "schema";
+});
+
+boot();
+</script>
+</body>
+</html>

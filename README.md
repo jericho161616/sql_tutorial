@@ -9,6 +9,26 @@ often as you like. No paid tools, no subscriptions, no trial that expires.
 
 ---
 
+> ### 👋 Never used a database before?
+>
+> Start with **[Week 0 — Start here](weeks/week-00/)**. It assumes *nothing* — no
+> programming, no database, no jargon. It explains what a table, a row and a column
+> actually are, why data is split across several tables, and walks you through your first
+> query.
+>
+> Four pages exist purely to stop you getting stuck:
+>
+> | Page | Open it when |
+> |---|---|
+> | **[GLOSSARY.md](GLOSSARY.md)** | A word stops making sense |
+> | **[SCHEMA-MAP.md](SCHEMA-MAP.md)** | "Where do I even get this from?" |
+> | **[ERRORS.md](ERRORS.md)** | Something breaks and the message is gibberish |
+> | **[CHEATSHEET.md](CHEATSHEET.md)** | You need the syntax mid-query |
+>
+> All four are also built into the app, under the **Learn** and **Tables** tabs.
+
+---
+
 ## Start here
 
 ### 1. Open your database
@@ -159,12 +179,20 @@ stay correct no matter how many times you reset.
 ```
 README.md            you are here
 HOW-TO-STUDY.md      the operating manual — read this before week 1
+
+GLOSSARY.md          every term in plain English
+SCHEMA-MAP.md        diagram + "which table holds what"
+ERRORS.md            every error you'll hit, decoded
+CHEATSHEET.md        one-page syntax reference
+
 PLANNER.md           the 12-week map + your progress checkboxes
 db/                  schema, seed data, and the messy table
+weeks/week-00/       START HERE if you're new — what a database even is
 weeks/week-01..12/   concepts, worked example, exercises, mini-project
 my-answers/          where YOUR work goes — one template per week
 solutions/           answers — stay out until you've attempted
 prompts/             the 10 AI-tutor prompts, filled in with your details
+app/                 the Study Console — weeks 1-4, runs Postgres in your browser
 ```
 
 **[`HOW-TO-STUDY.md`](HOW-TO-STUDY.md) is the one to read first.** It covers what teaches what,

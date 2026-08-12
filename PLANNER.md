@@ -44,6 +44,13 @@ courses skip entirely.
 
 ## Progress
 
+### Before you start
+
+- [ ] **Week 0 — Start here** · [folder](weeks/week-00/) · *~45 min, assumes nothing*
+  What a database, table, row and column are. Why data is split across tables. What keys are.
+  Your first query.
+  **Skip this only if you already know what a primary key is.**
+
 ### Foundation
 
 - [ ] **Week 1 — Reading data** · [folder](weeks/week-01/)

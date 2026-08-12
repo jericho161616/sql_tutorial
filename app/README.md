@@ -1,6 +1,6 @@
 # The SQL Study Console
 
-A single-file web app covering **weeks 1–4** of the course, with real PostgreSQL running
+A single-file web app covering **weeks 1–7** of the course, with real PostgreSQL running
 inside your browser tab.
 
 ## How it works
@@ -33,7 +33,7 @@ python3 -m http.server 8000
 
 ## What it does
 
-- Twelve exercises across weeks 1–4, each with the real question and expected row count
+- Twenty-one exercises across weeks 1–7, each with the real question and expected row count
 - **Answer checking** by running the reference solution against your result and comparing —
   it tells you *how* you're wrong (row count, column count, wrong order, wrong values), not
   just that you are
@@ -44,7 +44,7 @@ python3 -m http.server 8000
 
 ## What it doesn't do
 
-Weeks 5–12 are complete in the repo as markdown but aren't in the app yet. Work those in the
+Weeks 8–12 are complete in the repo as markdown but aren't in the app yet. Work those in the
 [Supabase SQL editor](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql)
 alongside the week folders.
 

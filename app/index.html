@@ -277,7 +277,7 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
     <div class="rail-heading">Written, not yet in the app</div>
     <ul class="week-list" id="weeklocked"></ul>
     <div class="rail-foot">
-      <p class="scratch-note">Weeks 5–12 are complete in the repo as markdown. This app covers 1–4 so you can test the format first.</p>
+      <p class="scratch-note">Weeks 8–12 are complete in the repo as markdown. They involve creating and changing data, so they need a different kind of checking than these do.</p>
     </div>
   </nav>
 
@@ -528,9 +528,12 @@ const WEEKS = [
   {n:1, name:"Reading data", blurb:"SELECT, WHERE, ORDER BY and LIMIT. By the end of this week you can pull any subset of rows and columns out of a single table, in any order you like."},
   {n:2, name:"Filtering properly", blurb:"AND/OR precedence, IN, BETWEEN, LIKE — and the week where NULL stops being intuitive and starts being understood."},
   {n:3, name:"Aggregation", blurb:"COUNT, SUM, AVG, GROUP BY and HAVING. Where SQL stops being a way to look things up and starts being a way to answer questions."},
-  {n:4, name:"Joins I", blurb:"Keys, INNER JOIN and LEFT JOIN. Real questions rarely fit in one table — this week you put them back together."}
+  {n:4, name:"Joins I", blurb:"Keys, INNER JOIN and LEFT JOIN. Real questions rarely fit in one table — this week you put them back together."},
+  {n:5, name:"Joins II & fan-out", blurb:"Self-joins, anti-joins, and fan-out — the bug that makes a query report 18% more revenue than the company earned, without raising a single error. The most important week in the first half."},
+  {n:6, name:"Subqueries & CTEs", blurb:"How to solve a hard question by writing three easy queries instead of one impossible one. The single biggest improvement you can make to how readable your SQL is."},
+  {n:7, name:"Window functions", blurb:"Ranking, running totals, and comparing a row to the one before it — while keeping every row. The biggest jump in what you can do."}
 ];
-const LOCKED = ["Joins II & fan-out","Subqueries & CTEs","Window functions","Types & cleaning","Schema design","Writing data","Indexes","Views & capstone"];
+const LOCKED = ["Types & cleaning","Schema design","Writing data","Indexes","Views & capstone"];
 
 const EX = {
 1:[
@@ -624,6 +627,75 @@ const EX = {
   hints:["Join <code>order_items</code> to <code>products</code> on <code>product_id</code>.",
    "Writing bare <code>unit_price</code> gives <code>column reference &quot;unit_price&quot; is ambiguous</code>. You must choose which table's you mean.",
    "Use <code>oi.unit_price</code> — the price at the time of sale. <code>p.unit_price</code> is today's price, and using it for historical revenue means last year's totals change whenever someone edits a price."]}
+],
+5:[
+ {id:"5.1", title:"Exercise 5.1", ordered:false,
+  q:"Prove fan-out to yourself. Write <b>one</b> query returning two numbers side by side: the true total of all shipping fees, and the total you get when <code>orders</code> is joined to <code>order_items</code>. Name them <code>correct_total</code> and <code>inflated_total</code>.",
+  expect:"Expected: 1 row, 2 columns — 976.50 and 2938.50",
+  sol:"SELECT (SELECT sum(shipping_fee) FROM orders) AS correct_total,\n       (SELECT sum(o.shipping_fee)\n        FROM   orders o\n        JOIN   order_items oi ON oi.order_id = o.order_id) AS inflated_total;",
+  hints:["You need two separate totals in one row. A subquery in the SELECT list returns a single value — you can have two of them.",
+   "The correct one touches only <code>orders</code>. The inflated one joins <code>orders</code> to <code>order_items</code> and sums the same column.",
+   "<code>SELECT (SELECT sum(shipping_fee) FROM orders) AS correct_total, (SELECT sum(o.shipping_fee) FROM orders o JOIN order_items oi ON oi.order_id = o.order_id) AS inflated_total;</code> — the join copies each order's fee onto every one of its line items, so the same fee is added 2 to 4 times."]},
+ {id:"5.2", title:"Exercise 5.2", ordered:true,
+  q:"Show every employee with their job title and their manager's name, sorted by employee name. Ana Villaruel is CEO and has no manager — show hers as <code>(none)</code>. Name the columns <code>employee</code>, <code>job_title</code> and <code>manager</code>.",
+  expect:"Expected: 12 rows · an INNER JOIN gives 11 — you'd lose the CEO",
+  sol:"SELECT    e.full_name                     AS employee,\n          e.job_title,\n          COALESCE(m.full_name, '(none)') AS manager\nFROM      employees e\nLEFT JOIN employees m ON m.employee_id = e.manager_id\nORDER  BY e.full_name;",
+  hints:["One table, joined to itself. Give it two different aliases — <code>employees e</code> and <code>employees m</code> — so you can tell the two copies apart.",
+   "The join condition links a person to their boss: <code>ON m.employee_id = e.manager_id</code>. Read it as “find the employee whose id equals this person's manager_id”.",
+   "Ana's <code>manager_id</code> is NULL, so an INNER JOIN drops her. Use <code>LEFT JOIN</code>, then <code>COALESCE(m.full_name, '(none)')</code> to turn the blank into readable text."]},
+ {id:"5.3", title:"Exercise 5.3", ordered:true,
+  q:"Find every order with <b>no payment record at all</b>. Show <code>order_id</code>, <code>order_date</code>, <code>status</code>, and the customer's full name as <code>customer</code>. Sort by <code>order_id</code>.",
+  expect:"Expected: 17 rows · then look at the status column and decide whether this is a bug",
+  sol:"SELECT o.order_id,\n       o.order_date,\n       o.status,\n       c.first_name || ' ' || c.last_name AS customer\nFROM   orders o\nJOIN   customers c ON c.customer_id = o.customer_id\nWHERE  NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.order_id)\nORDER  BY o.order_id;",
+  hints:["You want orders where something is <i>absent</i>. That is an anti-join.",
+   "<code>NOT EXISTS</code> is the clearest way: <code>WHERE NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.order_id)</code>. The <code>SELECT 1</code> is idiomatic — EXISTS only cares whether a row comes back, never what is in it.",
+   "Join to <code>customers</code> for the name, and combine first and last with <code>||</code>. Afterwards, group the 17 by status — every one is cancelled or pending, which means this is correct behaviour, not a data problem."]}
+],
+6:[
+ {id:"6.1", title:"Exercise 6.1", ordered:true,
+  q:"List every non-discontinued product priced <b>above the average price of non-discontinued products</b>. Show name, category, price, and the average itself as a column called <code>avg_price</code> so the comparison is visible. Most expensive first.",
+  expect:"Expected: 8 rows · avg_price should read 160.13 on every row",
+  sol:"SELECT product_name,\n       category,\n       unit_price,\n       (SELECT round(avg(unit_price), 2)\n        FROM   products WHERE NOT is_discontinued) AS avg_price\nFROM   products\nWHERE  NOT is_discontinued\n  AND  unit_price > (SELECT avg(unit_price)\n                     FROM   products WHERE NOT is_discontinued)\nORDER  BY unit_price DESC;",
+  hints:["You cannot write <code>WHERE unit_price &gt; avg(unit_price)</code> — WHERE runs before any aggregating happens. Compute the average in a separate subquery instead.",
+   "A subquery in brackets that returns one value can be used anywhere a value is allowed — in WHERE, and in the SELECT list too.",
+   "<b>The subquery needs its own filter.</b> It does not inherit the outer <code>WHERE NOT is_discontinued</code>. Leave it off and the average becomes 157.58 instead of 160.13, because the two dead products drag it down."]},
+ {id:"6.2", title:"Exercise 6.2", ordered:true,
+  q:"Find every customer who has bought at least one product in the <b>Storage</b> category. Show first name, last name and country, sorted by last name. Use <code>EXISTS</code> rather than a plain join.",
+  expect:"Expected: 29 rows · a plain JOIN returns far more — work out why first",
+  sol:"SELECT c.first_name,\n       c.last_name,\n       c.country\nFROM   customers c\nWHERE  EXISTS (SELECT 1\n               FROM   orders      o\n               JOIN   order_items oi ON oi.order_id  = o.order_id\n               JOIN   products    p  ON p.product_id = oi.product_id\n               WHERE  o.customer_id = c.customer_id\n                 AND  p.category = 'Storage')\nORDER  BY c.last_name;",
+  hints:["The inner query needs three tables to get from an order to a product category: <code>orders</code> → <code>order_items</code> → <code>products</code>.",
+   "Link the inner query back to the outer one with <code>WHERE o.customer_id = c.customer_id</code>. That reference to <code>c</code> is what makes it run once per customer.",
+   "A plain JOIN would return one row per matching <i>order line</i>, so a customer who bought Storage items four times appears four times. EXISTS asks “is there at least one?”, stops looking, and can never duplicate a row."]},
+ {id:"6.3", title:"Exercise 6.3", ordered:true,
+  q:"Using a <b>CTE</b>, list customers whose completed and shipped orders total more than $3,000. Show first name, last name, their order count as <code>orders</code>, and the total as <code>total</code>, biggest first. Count orders with <code>count(DISTINCT ...)</code> and total with <code>quantity * unit_price</code>.",
+  expect:"Expected: 12 rows",
+  sol:"WITH customer_totals AS (\n    SELECT   o.customer_id,\n             count(DISTINCT o.order_id)                 AS orders,\n             round(sum(oi.quantity * oi.unit_price), 2) AS total\n    FROM     orders o\n    JOIN     order_items oi ON oi.order_id = o.order_id\n    WHERE    o.status IN ('completed','shipped')\n    GROUP BY o.customer_id\n)\nSELECT   c.first_name,\n         c.last_name,\n         t.orders,\n         t.total\nFROM     customer_totals t\nJOIN     customers c ON c.customer_id = t.customer_id\nWHERE    t.total > 3000\nORDER BY t.total DESC;",
+  hints:["A CTE is a named step written before the main query: <code>WITH customer_totals AS ( ... ) SELECT ... FROM customer_totals</code>.",
+   "Build the totals per customer inside the CTE, then join to <code>customers</code> outside it just to attach the names. Two jobs, two places.",
+   "<b>Use <code>count(DISTINCT o.order_id)</code>, not <code>count(*)</code>.</b> After joining to order_items there is one row per line item, so <code>count(*)</code> would count line items and label them orders. The DISTINCT undoes the fan-out for that column."]}
+],
+7:[
+ {id:"7.1", title:"Exercise 7.1", ordered:true,
+  q:"For every non-discontinued product show name, category, price, and its price rank <b>within its own category</b> (most expensive = 1), as <code>price_rank</code>. Sort by category, then rank.",
+  expect:"Expected: 23 rows · every product kept, each carrying its rank",
+  sol:"SELECT product_name,\n       category,\n       unit_price,\n       RANK() OVER (PARTITION BY category ORDER BY unit_price DESC) AS price_rank\nFROM   products\nWHERE  NOT is_discontinued\nORDER  BY category, price_rank;",
+  hints:["Unlike <code>GROUP BY</code>, a window function keeps every row. 23 products in, 23 rows out — each one just gains an extra column.",
+   "<code>PARTITION BY category</code> restarts the numbering for each category. <code>ORDER BY unit_price DESC</code> inside the OVER decides what rank 1 means.",
+   "<code>RANK() OVER (PARTITION BY category ORDER BY unit_price DESC)</code>. On this data <code>ROW_NUMBER()</code> gives the same answer because no two live products share a price within a category — but they would disagree the moment two did."]},
+ {id:"7.2", title:"Exercise 7.2", ordered:true,
+  q:"Return the <b>two most expensive products in each category</b>, with their rank as <code>rn</code>. Show name, category, price and rank, sorted by category then rank.",
+  expect:"Expected: 12 rows — six categories, two each",
+  sol:"WITH ranked AS (\n    SELECT product_name,\n           category,\n           unit_price,\n           ROW_NUMBER() OVER (PARTITION BY category ORDER BY unit_price DESC) AS rn\n    FROM   products\n    WHERE  NOT is_discontinued\n)\nSELECT product_name, category, unit_price, rn\nFROM   ranked\nWHERE  rn <= 2\nORDER  BY category, rn;",
+  hints:["Try filtering on the window function directly — <code>WHERE rn &lt;= 2</code> in the same query — and read the error. It tells you something about when window functions are computed.",
+   "Window functions run <i>after</i> WHERE, so WHERE cannot see them. Compute the numbering in one step, filter it in the next.",
+   "Wrap the ranking in a CTE, then filter outside it. <b>Memorise this two-step shape</b> — “top N per group” is one of the most frequently asked questions in SQL interviews and in real work."]},
+ {id:"7.3", title:"Exercise 7.3", ordered:true,
+  q:"Find each customer's <b>most recent order</b>. Show first name, last name, <code>order_id</code>, <code>order_date</code> and <code>status</code> — exactly one row per customer — most recent first.",
+  expect:"Expected: 38 rows · one per customer who has ever ordered",
+  sol:"WITH ranked_orders AS (\n    SELECT o.order_id,\n           o.customer_id,\n           o.order_date,\n           o.status,\n           ROW_NUMBER() OVER (PARTITION BY o.customer_id\n                              ORDER BY o.order_date DESC, o.order_id DESC) AS rn\n    FROM   orders o\n)\nSELECT c.first_name,\n       c.last_name,\n       r.order_id,\n       r.order_date,\n       r.status\nFROM   ranked_orders r\nJOIN   customers c ON c.customer_id = r.customer_id\nWHERE  r.rn = 1\nORDER  BY r.order_date DESC, r.order_id DESC;",
+  hints:["Same shape as 7.2: number the rows inside a CTE, then keep only number 1.",
+   "Partition by customer, order by date descending so the newest order gets number 1.",
+   "<b>Use <code>ROW_NUMBER</code>, not <code>RANK</code>.</b> If a customer placed two orders on the same day, RANK gives both rank 1 and you would get two rows for one customer. Add <code>, o.order_id DESC</code> as a tiebreaker so the same query gives the same answer every time."]}
 ]};
 
 const SCHEMA_REF = [
@@ -849,7 +921,7 @@ function renderRail(){
   }).join("");
   $("weeklocked").innerHTML = LOCKED.map((nm,i) =>
     `<li><button class="week-item" disabled>
-      <span class="wk-num">${String(i+5).padStart(2,"0")}</span>
+      <span class="wk-num">${String(i + 1 + WEEKS.length).padStart(2,"0")}</span>
       <span class="wk-name">${nm}</span></button></li>`).join("");
 
   const all = Object.values(EX).flat();

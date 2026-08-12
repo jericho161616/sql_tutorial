@@ -158,12 +158,18 @@ stay correct no matter how many times you reset.
 
 ```
 README.md            you are here
+HOW-TO-STUDY.md      the operating manual — read this before week 1
 PLANNER.md           the 12-week map + your progress checkboxes
 db/                  schema, seed data, and the messy table
 weeks/week-01..12/   concepts, worked example, exercises, mini-project
+my-answers/          where YOUR work goes — one template per week
 solutions/           answers — stay out until you've attempted
 prompts/             the 10 AI-tutor prompts, filled in with your details
 ```
+
+**[`HOW-TO-STUDY.md`](HOW-TO-STUDY.md) is the one to read first.** It covers what teaches what,
+where you write queries versus where you save answers, the 15-minute rule for getting unstuck,
+and what to do when you fall behind.
 
 ---
 

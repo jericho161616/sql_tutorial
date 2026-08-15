@@ -1,6 +1,6 @@
 # The SQL Study Console
 
-A single-file web app covering **weeks 1–10** of the course, with real PostgreSQL running
+A single-file web app covering **all 12 weeks** of the course, plus six incident challenges, with real PostgreSQL running
 inside your browser tab.
 
 ## How it works
@@ -33,7 +33,8 @@ python3 -m http.server 8000
 
 ## What it does
 
-- Thirty exercises across weeks 1–10, each with the real question and expected row count
+- 36 exercises across all 12 weeks, each with the real question and expected row count
+- **6 incidents** — case-based challenges written as support tickets, where you diagnose a real bug this database can produce
 - **Answer checking** by running the reference solution against your result and comparing —
   it tells you *how* you're wrong (row count, column count, wrong order, wrong values), not
   just that you are
@@ -42,25 +43,36 @@ python3 -m http.server 8000
 - **A scratchpad** for free-form SQL against the same database
 - Progress, drafts and revealed hints saved in `localStorage`, surviving reloads
 
-## What it doesn't do
+## Incidents
 
-Weeks 11–12 aren't in the app. Week 11 is about indexes and `EXPLAIN` — those change how
-*fast* a query runs, never what it returns, so there is nothing for a result-checker to grade.
-Week 12 ends in a capstone whose value is the written analysis. Both are better done in the
-[Supabase SQL editor](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql)
-alongside the week folders.
+Six case-based challenges, separate from the weeks. Each opens as a ticket from a colleague or
+client — *"revenue is overstated by 18%"*, *"your app gets slower as we grow"* — and you work
+out what is wrong.
 
-## Two kinds of checking
+Every one is a genuine bug this database produces, drawn from the traps deliberately seeded
+into it. Some are answered by picking the right diagnosis from four options, where every
+option explains itself, including the wrong ones. Others require writing the query that proves
+the cause. All end in a debrief describing what to carry forward.
+
+The week 12 capstone stays in the repo rather than the app — its value is the written
+analysis, which is not something a checker should grade.
+
+## Three kinds of checking
 
 Weeks 1–8 are read-only. Your result is compared against the reference solution's result, and
 mismatches are reported by kind — wrong row count, wrong column count, right rows in the wrong
 order, or wrong values.
 
-Weeks 9–10 **write** to the database, so there is no result to compare. Instead the app runs a
+Weeks 9–12 **write** to the database, so there is no result to compare. Instead the app runs a
 check query against the database *afterwards* and grades the outcome — inspecting
-`information_schema` to confirm your `CREATE TABLE` actually carries the constraints asked
-for, or counting rows to confirm an `UPDATE` did what it should. Extra columns and different
-names are fine; only the stated requirements are checked.
+`information_schema` to confirm your `CREATE TABLE` carries the constraints asked for,
+checking `pg_indexes` for an index you created, or counting rows to confirm an `UPDATE` did
+what it should. Extra columns and different names are fine; only the stated requirements are
+checked.
+
+Some questions have no query to grade at all — reading an `EXPLAIN` plan, or judging what a
+stale materialised view shows a user. Those are multiple choice, and each option carries its
+own explanation, so a wrong pick teaches as much as a right one.
 
 Those exercises are marked with a warning, and the check query's output is shown so you can
 see exactly what was measured. All of them are safe to re-run.

@@ -229,6 +229,52 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
 .learn-intro{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.65;margin:0 0 12px}
 .learn-link{display:block;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--accent)}
 
+/* ---- multiple choice ---- */
+.opts{display:flex;flex-direction:column;gap:7px;margin:14px 0 0}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;cursor:pointer;
+  padding:11px 13px;border:1px solid var(--rule);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.5}
+.opt:hover:not(:disabled){border-color:var(--rule-strong);background:var(--surface-2)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt .mk{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-3);
+  min-width:16px;padding-top:2px}
+.opt code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:1px 4px;
+  border-radius:2px;border:1px solid var(--rule)}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.right .mk{color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .mk{color:var(--bad)}
+.opt-why{display:block;font-family:var(--mono);font-size:11.5px;line-height:1.6;
+  margin-top:9px;padding-top:9px;border-top:1px solid currentColor;color:var(--ink-2);opacity:.95}
+.opt.right .opt-why{color:var(--good)}
+.opt.wrong .opt-why{color:var(--bad)}
+
+/* ---- incidents ---- */
+.inc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.sev{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 8px;border-radius:2px}
+.sev.high{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad)}
+.sev.med{background:var(--ochre-soft);color:var(--ochre);border:1px solid var(--ochre)}
+.sev.low{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.ticket{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--ochre);
+  border-radius:var(--radius);padding:14px 16px;margin:0 0 16px;box-shadow:var(--shadow)}
+.ticket .from{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 7px}
+.ticket p{margin:0 0 9px;font-size:15.5px;max-width:64ch}
+.ticket p:last-child{margin-bottom:0}
+.ticket code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:1px 5px;
+  border-radius:2px;border:1px solid var(--rule)}
+.ticket pre{font-family:var(--mono);font-size:11.5px;background:var(--surface-2);border:1px solid var(--rule);
+  border-radius:2px;padding:10px 12px;overflow-x:auto;margin:0 0 9px;line-height:1.55}
+.debrief{margin-top:14px;padding:14px 16px;border:1px solid var(--good);border-radius:var(--radius);
+  background:var(--good-soft);color:var(--good);font-size:15px;line-height:1.6}
+.debrief b{font-weight:700}
+.debrief .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  display:block;margin-bottom:7px;opacity:.85}
+.debrief code{font-family:var(--mono);font-size:.85em;background:transparent;
+  border:1px solid currentColor;padding:0 4px;border-radius:2px}
+
 @media (max-width:1080px){
   .shell{grid-template-columns:196px minmax(0,1fr)}
   .aside{grid-column:1/-1;border-left:0;border-top:1px solid var(--rule);position:static;max-height:none}
@@ -274,7 +320,10 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
     </div>
     <div class="rail-heading">Available</div>
     <ul class="week-list" id="weeklist"></ul>
-    <div class="rail-heading">Written, not yet in the app</div>
+    <div class="rail-heading">Incidents · real bugs to solve</div>
+    <ul class="week-list" id="inclist"></ul>
+
+    <div class="rail-heading" id="lockedhead" hidden>Written, not yet in the app</div>
     <ul class="week-list" id="weeklocked"></ul>
     <div class="rail-foot">
       <p class="scratch-note">Weeks 11–12 are complete in the repo as markdown. Indexes change how fast a query runs, never what it returns, so they need measuring rather than checking.<br><br>Weeks 9 and 10 <b>write</b> to the database. Reset any time — your progress and saved answers are kept.</p>
@@ -287,6 +336,8 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
     <p class="week-blurb" id="wkblurb"></p>
     <div class="ex-tabs" role="tablist" aria-label="Exercises" id="extabs"></div>
 
+    <div id="ticket"></div>
+
     <section class="card">
       <div class="card-head">
         <h3 id="exlabel">Exercise 1.1</h3>
@@ -295,8 +346,9 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
       <div class="card-body">
         <p class="question" id="question"></p>
         <p class="expect" id="expect"></p>
+        <div id="mcqzone"></div>
       </div>
-      <div class="editor-bar">
+      <div class="editor-bar" id="editorbar">
         <span class="lbl" id="editorlbl">Your query</span>
         <div class="btn-row">
           <button class="btn ghost" id="btnclear" type="button">Clear</button>
@@ -306,6 +358,8 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
       <textarea class="sql" id="sql" spellcheck="false" placeholder="SELECT ..."></textarea>
       <div id="resultzone"></div>
     </section>
+
+    <div id="debriefzone"></div>
   </main>
 
   <aside class="aside" aria-label="Help">
@@ -580,9 +634,11 @@ const WEEKS = [
   {n:7, name:"Window functions", blurb:"Ranking, running totals, and comparing a row to the one before it — while keeping every row. The biggest jump in what you can do."},
   {n:8, name:"Types & cleaning", blurb:"Real data fights back. Dates in five formats, money stored as text, eight spellings of three plan names. You'll profile the mess before changing a thing — which is the whole discipline."},
   {n:9, name:"Schema design & DDL", blurb:"You stop reading tables and start designing them. Types, constraints, keys. This is where the database-administration half begins, and it writes to the database — see the note on each exercise."},
-  {n:10, name:"Writing data safely", blurb:"INSERT, UPDATE, DELETE and transactions. Includes the four-second habit that prevents the mistake everyone makes exactly once."}
+  {n:10, name:"Writing data safely", blurb:"INSERT, UPDATE, DELETE and transactions. Includes the four-second habit that prevents the mistake everyone makes exactly once."},
+  {n:11, name:"Indexes & performance", blurb:"EXPLAIN, scan types, and what an index really costs. The week where you learn that Postgres ignoring your new index is usually Postgres being right."},
+  {n:12, name:"Views & security", blurb:"Views, materialised views, and least privilege. How to make “revenue” mean one thing to everyone, and how to give an app the minimum it needs."}
 ];
-const LOCKED = ["Indexes & performance","Views, security & capstone"];
+const LOCKED = [];
 
 const EX = {
 1:[
@@ -826,7 +882,240 @@ const EX = {
   hints:["Wrap the two updates in <code>BEGIN;</code> … <code>COMMIT;</code> and run the whole block in one go.",
    "<b>Why it must be one transaction:</b> if the first UPDATE commits and the connection dies before the second, 10 units have vanished from the world. Stock says 330 and 285 — ten short — with nothing recording that a transfer was half-finished. That is atomicity, the A in ACID.",
    "Try <code>ROLLBACK;</code> instead of <code>COMMIT;</code> first and re-check the stock — nothing changed. That is your undo button, and it is why you can run something risky, look at the result, and back out."]}
+],
+11:[
+ {id:"11.1", title:"Exercise 11.1", type:"mcq",
+  q:"Run this in the Scratchpad and read the plan:<pre>EXPLAIN ANALYZE\nSELECT * FROM orders WHERE customer_id = 8;</pre>You'll see <code>Seq Scan</code>, and a line reading <code>Rows Removed by Filter: 116</code>. <b>What does that line tell you?</b>",
+  options:[
+   {t:"The query is broken — it discarded rows it should have returned.", ok:false,
+    why:"No. Those rows genuinely did not match <code>customer_id = 8</code>. Discarding them is correct behaviour."},
+   {t:"The database read all 120 rows and threw away 116 to find 4. That wasted work is the signature of a missing index.", ok:true,
+    why:"Exactly. It examined every row to return a handful. On 120 rows that costs nothing; on 12 million it is the difference between instant and unusable."},
+   {t:"116 rows were corrupted and had to be skipped.", ok:false,
+    why:"No. “Filter” here means the WHERE clause, not damaged data."},
+   {t:"An index was used and it eliminated 116 rows efficiently.", ok:false,
+    why:"The opposite — the plan says <code>Seq Scan</code>, meaning no index was used at all. An index scan would not have read those rows in the first place."}],
+  hints:["“Filter” is the plan's word for your WHERE clause.",
+   "The table has 120 rows and the query returns about 4. Where did the other 116 go, and what did it cost to look at them?"]},
+ {id:"11.2", title:"Exercise 11.2", writes:true,
+  q:"Postgres indexes primary keys automatically but <b>not</b> foreign keys — and this schema has four unindexed ones. Create an index on each: <code>orders.customer_id</code>, <code>order_items.order_id</code>, <code>order_items.product_id</code> and <code>payments.order_id</code>.",
+  expect:"Checked by looking for an index on each of the four columns",
+  sol:"CREATE INDEX idx_orders_customer_id     ON orders      (customer_id);\nCREATE INDEX idx_order_items_order_id   ON order_items (order_id);\nCREATE INDEX idx_order_items_product_id ON order_items (product_id);\nCREATE INDEX idx_payments_order_id      ON payments    (order_id);\n\nANALYZE orders;\nANALYZE order_items;\nANALYZE payments;",
+  verify:"SELECT (SELECT count(*) FROM pg_indexes WHERE schemaname='shop' AND tablename='orders'      AND indexdef LIKE '%(customer_id)%')::int AS orders_customer,\n       (SELECT count(*) FROM pg_indexes WHERE schemaname='shop' AND tablename='order_items' AND indexdef LIKE '%(order_id)%')::int   AS items_order,\n       (SELECT count(*) FROM pg_indexes WHERE schemaname='shop' AND tablename='order_items' AND indexdef LIKE '%(product_id)%')::int AS items_product,\n       (SELECT count(*) FROM pg_indexes WHERE schemaname='shop' AND tablename='payments'    AND indexdef LIKE '%(order_id)%')::int   AS payments_order;",
+  expected:[["1","1","1","1"]],
+  hints:["<code>CREATE INDEX index_name ON table_name (column_name);</code> — one statement per index.",
+   "Name them consistently. <code>idx_&lt;table&gt;_&lt;column&gt;</code> is boring and predictable, which is exactly what you want when a plan mentions one.",
+   "Finish with <code>ANALYZE orders;</code> and the others. The planner works from statistics, and it will not trust a new index until they are refreshed — stale statistics are the single most common cause of a badly chosen plan."]},
+ {id:"11.3", title:"Exercise 11.3", type:"mcq",
+  q:"You created those four indexes. Now re-run the week 4 join query in the Scratchpad and look at the plan — <b>it still says <code>Seq Scan</code></b>, and the timing barely moved. What is the correct conclusion?",
+  options:[
+   {t:"The indexes were created wrongly and need rebuilding.", ok:false,
+    why:"The check in 11.2 confirmed they exist. Creation was fine."},
+   {t:"Postgres is being unhelpful and you should force it with <code>SET enable_seqscan = off</code>.", ok:false,
+    why:"That switch is a diagnostic toy, not a fix. It removes an option the planner needs and makes things slower in production. Use it once to compare costs, then put it back."},
+   {t:"On 120 rows a sequential scan genuinely is cheaper, so the planner is right. The indexes matter as the tables grow, and for cascade deletes and foreign key locking.", ok:true,
+    why:"Correct. The whole table fits in one page — reading it is a single I/O, and an index would mean reading the index <i>and then</i> the table. Index foreign keys anyway: the cost is near zero and the payoff arrives before you notice you needed it."},
+   {t:"The query returns every row, so no index could ever help it.", ok:true,
+    why:"Also true, and worth spotting. An index helps you find a few rows among many; this query has no WHERE clause at all. Both this and the size argument are correct — but the size one is the more general lesson."}],
+  hints:["How big is the table, really? How many disk pages does 120 rows occupy?",
+   "Ask what an index is <i>for</i>. Does this particular query need to find a few rows, or all of them?"]}
+],
+12:[
+ {id:"12.1", title:"Exercise 12.1", writes:true,
+  q:"Create a view called <code>live_products</code> showing <code>product_id</code>, <code>sku</code>, <code>product_name</code>, <code>category</code>, <code>unit_price</code> and a calculated <code>margin</code>, for products that are <b>not discontinued</b>.",
+  expect:"Expected: the view exists and returns 23 rows",
+  sol:"CREATE OR REPLACE VIEW live_products AS\nSELECT product_id,\n       sku,\n       product_name,\n       category,\n       unit_price,\n       unit_price - cost_price AS margin\nFROM   products\nWHERE  NOT is_discontinued;",
+  verify:"SELECT (SELECT count(*) FROM information_schema.views WHERE table_schema='shop' AND table_name='live_products')::int AS view_made,\n       (SELECT count(*) FROM live_products)::int AS row_count;",
+  expected:[["1","23"]],
+  hints:["<code>CREATE OR REPLACE VIEW name AS SELECT ...;</code> — a view is just a saved query with a name.",
+   "It stores no data. It runs fresh every time you select from it, so it can never go stale.",
+   "Use <code>CREATE OR REPLACE</code> rather than plain <code>CREATE</code> so you can re-run it while you get the columns right."]},
+ {id:"12.2", title:"Exercise 12.2", writes:true,
+  q:"Create a view <code>customer_summary</code> with one row for <b>every</b> customer — including the two who have never ordered. It needs <code>customer_id</code>, <code>full_name</code>, <code>country</code>, <code>total_orders</code> (0 where none) and <code>total_revenue</code> (0.00 where none). Count only <code>completed</code> and <code>shipped</code> orders.",
+  expect:"Expected: 40 rows — and 3 showing zero orders, not 2. Work out who the third is.",
+  sol:"CREATE OR REPLACE VIEW customer_summary AS\nWITH order_totals AS (\n    SELECT   o.order_id,\n             o.customer_id,\n             round(sum(oi.quantity * oi.unit_price * (1 - oi.discount_pct/100)), 2) AS order_value\n    FROM     orders o\n    JOIN     order_items oi ON oi.order_id = o.order_id\n    WHERE    o.status IN ('completed','shipped')\n    GROUP BY o.order_id, o.customer_id\n)\nSELECT    c.customer_id,\n          c.first_name || ' ' || c.last_name AS full_name,\n          c.country,\n          count(t.order_id)                        AS total_orders,\n          COALESCE(round(sum(t.order_value), 2), 0.00) AS total_revenue\nFROM      customers c\nLEFT JOIN order_totals t ON t.customer_id = c.customer_id\nGROUP BY  c.customer_id, c.first_name, c.last_name, c.country;",
+  verify:"SELECT (SELECT count(*) FROM information_schema.views WHERE table_schema='shop' AND table_name='customer_summary')::int AS view_made,\n       (SELECT count(*) FROM customer_summary)::int AS row_count,\n       (SELECT count(*) FROM customer_summary WHERE total_orders = 0)::int AS never_ordered;",
+  expected:[["1","40","3"]],
+  hints:["Every customer must appear, so the join from <code>customers</code> outward has to be a <code>LEFT JOIN</code>.",
+   "Collapse the order values to one row per order <i>first</i>, in a CTE — otherwise joining straight to <code>order_items</code> multiplies each order by its line items and inflates the revenue.",
+   "<code>count(t.order_id)</code>, not <code>count(*)</code> — after a LEFT JOIN, <code>count(*)</code> counts the empty row and reports 1 order for a customer with none. Wrap the sum in <code>COALESCE(..., 0.00)</code> so “no orders” shows as zero rather than blank.",
+   "<b>The third zero is Chloe Dubois.</b> She has placed two orders — but one is <code>pending</code> and the other <code>cancelled</code>, so neither counts as revenue. “Never ordered” and “never bought anything” are different statements, and a churn report that confuses them would treat an active customer as a lost one."]},
+ {id:"12.3", title:"Exercise 12.3", type:"mcq",
+  q:"A dashboard is built on a <b>materialised</b> view refreshed nightly. One morning the refresh job fails silently, and nobody notices for nine days. <b>What does the dashboard show during those nine days?</b>",
+  options:[
+   {t:"An error, so the team immediately knows something is wrong.", ok:false,
+    why:"No — and this is precisely what makes it dangerous. A materialised view holds real, queryable data. It answers instantly and without complaint."},
+   {t:"Empty results, which would be obvious.", ok:false,
+    why:"No. The stored rows are still there; nothing cleared them."},
+   {t:"Nine-day-old numbers, presented as though they were current — with nothing on screen to indicate their age.", ok:true,
+    why:"Correct, and it is the central risk of materialised views. It looks identical to a working dashboard. The fix is to store the refresh time and display it: “as at 04:00 on the 3rd” makes a stale figure useful instead of misleading."},
+   {t:"It falls back to querying the underlying tables directly.", ok:false,
+    why:"No — a materialised view has no fallback. It serves what was stored at the last successful REFRESH, full stop."}],
+  hints:["A materialised view stores its results. What happens to stored data when nothing updates it?",
+   "Ask what the <i>user</i> of the dashboard would see, and whether anything would look unusual to them."]}
 ]};
+
+/* ==========================================================
+   INCIDENTS — case-based challenges
+   Each one is a real bug this database can actually produce.
+   ========================================================== */
+const INCIDENTS = [
+{id:"inc1", title:"Revenue is overstated by 18%", sev:"high", type:"mcq",
+ from:"Finance, 09:12",
+ scenario:`<p>“Our dashboard says last year's completed and shipped revenue was
+   <b>$126,995.83</b>. The accounting system says <b>$107,629.93</b>. That's a
+   <b>$19,365</b> gap and the auditors are asking. The query has been running for months.”</p>
+   <p>Here is the query:</p>
+   <pre>SELECT round(sum(oi.quantity * oi.unit_price
+                 * (1 - oi.discount_pct/100)), 2) AS revenue
+FROM   orders o
+JOIN   order_items oi  ON oi.order_id = o.order_id
+JOIN   products    p   ON p.product_id = oi.product_id
+JOIN   payments    pay ON pay.order_id = o.order_id
+WHERE  o.status IN ('completed','shipped');</pre>`,
+ q:"<b>What is causing the overstatement?</b>",
+ options:[
+  {t:"The <code>discount_pct</code> is being applied the wrong way round.", ok:false,
+   why:"No — <code>(1 - discount_pct/100)</code> is correct, and a discount error would make revenue too <i>low</i>, not too high."},
+  {t:"Cancelled and refunded orders are being counted.", ok:false,
+   why:"A good instinct, and the most common revenue bug — but the <code>WHERE</code> already excludes them. Look at the joins instead."},
+  {t:"The join to <code>payments</code> duplicates every line item on orders paid in more than one instalment, so their goods value is counted twice.", ok:true,
+   why:"Correct. 25 orders have two or more payment rows. Joining to <code>payments</code> multiplies each of those orders' line items by its number of payments. The join adds no column the query even uses — it was added to mean “only count orders we were paid for”, and quietly became an arithmetic error."},
+  {t:"<code>products</code> should not be joined, because a product could be listed twice.", ok:false,
+   why:"No. <code>product_id</code> is the primary key of <code>products</code>, so that join matches exactly one row per line item and cannot multiply anything."}],
+ hints:["The <code>WHERE</code> clause is already correct. Look at what each join brings in — and whether the query actually <i>uses</i> anything from it.",
+  "Count the rows with and without one of those joins. Which one changes the count?"],
+ debrief:`<b>This is fan-out</b>, and it is the most expensive bug in this whole course.
+   The lesson is not “avoid joins” — it is that <b>a join you don't take columns from should
+   almost never be a join</b>. To test that a payment exists, use
+   <code>EXISTS</code>: it answers yes or no and stops, so it can never duplicate a row.
+   And count your rows before and after every join.`},
+
+{id:"inc2", title:"Four customers never got the email", sev:"med", type:"sql",
+ from:"Marketing, 14:40",
+ scenario:`<p>“We sent a campaign to every customer outside Nigeria. We have 40 customers and
+   3 are Nigerian, so 37 people should have received it. The send log says <b>33</b>.
+   Four people were skipped and we can't work out who.”</p>
+   <p>This is the query the campaign tool used:</p>
+   <pre>SELECT * FROM customers WHERE country &lt;&gt; 'Nigeria';</pre>`,
+ q:"<b>Find the four missing customers.</b> Return their <code>customer_id</code>, <code>first_name</code>, <code>last_name</code> and <code>email</code>, sorted by <code>customer_id</code> — the ones this query silently skipped.",
+ sol:"SELECT customer_id,\n       first_name,\n       last_name,\n       email\nFROM   customers\nWHERE  country IS NULL\nORDER  BY customer_id;",
+ ordered:true,
+ hints:["The query returned 33 of an expected 37. Something about those four rows made the comparison neither true nor false.",
+  "What is stored in <code>country</code> for those four? And what is the only operator that can test for it?"],
+ debrief:`Those four have <code>NULL</code> in <code>country</code>. <code>NULL</code> means
+   <i>unknown</i>, so SQL cannot say whether an unknown country differs from Nigeria — the
+   comparison returns <code>NULL</code>, not true, and <code>WHERE</code> drops the row.
+   <b>No error, no warning, four people missed.</b><br><br>
+   The fix is <code>WHERE country &lt;&gt; 'Nigeria' OR country IS NULL</code>, or the shorthand
+   <code>WHERE country IS DISTINCT FROM 'Nigeria'</code>. And the habit that catches this
+   forever: <b>when you split a table in two, the two group sizes must add up to the total.</b>
+   3 + 33 = 36, not 40. That check takes ten seconds.`},
+
+{id:"inc3", title:"August revenue “collapsed 63%”", sev:"high", type:"mcq",
+ from:"The CEO, 07:55",
+ scenario:`<p>“August revenue fell <b>63%</b> against July. What happened? Do we have a
+   problem with the sales team?”</p>
+   <p>The monthly figures:</p>
+   <pre>2024-04    4,164.50
+2024-05    3,350.00
+2024-06    4,285.50
+2024-07   11,627.10     +171%
+2024-08    4,268.60     -63%
+2024-09    4,333.50      +1.5%</pre>`,
+ q:"<b>What do you tell the CEO?</b>",
+ options:[
+  {t:"August was a bad month and the sales team needs investigating.", ok:false,
+   why:"Look at August against every month <i>except</i> July: $4,268 sits within $100 of April, June and September. August is completely normal."},
+  {t:"July was the anomaly. August is a return to the usual run rate of about $4,300 — the 63% drop is measured against a spike, not against normal.", ok:true,
+   why:"Correct. The question worth asking is not “what went wrong in August” but “what went <i>right</i> in July” — that is the month that deviates, and understanding it might be repeatable."},
+  {t:"The data is wrong and should be recalculated.", ok:false,
+   why:"Every figure here is accurate. The numbers are fine; the comparison is what misleads."},
+  {t:"Revenue is trending downward across the whole period.", ok:false,
+   why:"It is not. Excluding July, the months are flat at roughly $4,300 — no trend up or down."}],
+ hints:["Cover up the July row and look at the sequence again. Does August still look unusual?",
+  "A percentage is a ratio. When one side of it is abnormal, the percentage describes that abnormality, not the other side."],
+ debrief:`<b>Percentage change tells you about the denominator as much as the numerator.</b>
+   Against a spike, a return to normal reads as a collapse. Against a tiny base, ordinary
+   variation reads as explosive growth — February 2024 in this same dataset shows
+   <b>+1,407%</b>, because January holds a single order from a partial month.<br><br>
+   Two habits: <b>always publish the absolute number beside the percentage</b>, so the reader
+   can sanity-check it — and <b>check whether your first and last periods are complete</b>
+   before reading any trend at all.`},
+
+{id:"inc4", title:"“Your app gets slower as we grow”", sev:"high", type:"sql", writes:true,
+ from:"Client engineering, 11:20",
+ scenario:`<p>“Loading a customer's order history was instant during the trial. Now that we
+   have real volume it takes several seconds, and it keeps getting worse. Your competitor's
+   product doesn't do this.”</p>
+   <p>You run <code>EXPLAIN ANALYZE</code> on the query behind that page and see:</p>
+   <pre>Seq Scan on orders  (cost=0.00..3.50 rows=3)
+  Filter: (customer_id = 8)
+  Rows Removed by Filter: 116</pre>
+   <p>The database reads every order in the table to find one customer's.</p>`,
+ q:"<b>Fix it.</b> Create an index that lets Postgres find a customer's orders directly instead of scanning the whole table, then run <code>ANALYZE orders;</code> so the planner picks it up.",
+ sol:"CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders (customer_id);\nANALYZE orders;",
+ verify:"SELECT count(*)::int AS index_on_customer_id\nFROM   pg_indexes\nWHERE  schemaname='shop' AND tablename='orders' AND indexdef LIKE '%(customer_id)%';",
+ expected:[["1"]],
+ hints:["The filter is on one column of one table. That column is a foreign key — and Postgres does not index those for you.",
+  "<code>CREATE INDEX name ON table (column);</code>"],
+ debrief:`<b>Postgres indexes primary keys automatically but never foreign keys.</b> That single
+   fact causes an enormous share of real “it got slow as we grew” incidents — because it does
+   not hurt at all on trial-sized data, and hurts badly at production scale.<br><br>
+   Note what the client experienced: not a sudden failure, but a steady decline. A sequential
+   scan costs time proportional to table size, so the symptom arrives gradually and is easy to
+   blame on everything except the missing index. <b>Index every foreign key from day one</b> —
+   it is near-free, and adding one later to a large, busy table is far more disruptive.`},
+
+{id:"inc5", title:"Two analysts, two revenue numbers", sev:"med", type:"mcq",
+ from:"Head of Data, 16:05",
+ scenario:`<p>“Priya's report says revenue is <b>$107,629.93</b>. Marcus's says
+   <b>$114,000-ish</b>. They pulled from the same database, on the same day. One of them is
+   wrong and I need to know which before the board meeting.”</p>
+   <p>Priya filters <code>WHERE status IN ('completed','shipped')</code>.<br>
+   Marcus filters <code>WHERE status &lt;&gt; 'cancelled'</code>.</p>`,
+ q:"<b>Who is right?</b>",
+ options:[
+  {t:"Priya. Marcus's filter still includes refunded and pending orders, which are not earned revenue.", ok:true,
+   why:"Correct. <code>&lt;&gt; 'cancelled'</code> excludes only the 7 cancelled orders, leaving 5 refunded and 10 pending in the total — money that was returned, or never arrived."},
+  {t:"Marcus. Excluding fewer orders gives a more complete picture.", ok:false,
+   why:"More rows is not more correct. A refunded order is money that came in and went back out; counting it as revenue overstates what the business earned."},
+  {t:"Both are wrong — pending orders should be included as future revenue.", ok:false,
+   why:"Pending orders may be worth reporting, but as a separate pipeline figure. Mixing unearned money into an earned-revenue total is exactly the ambiguity that caused this argument."},
+  {t:"Neither — the difference must come from somewhere other than the status filter.", ok:false,
+   why:"The status filter fully explains it. Refunded and pending orders together account for the gap."}],
+ hints:["List the five order statuses and ask, one at a time: is this money the business actually earned and kept?",
+  "<code>&lt;&gt; 'cancelled'</code> excludes exactly one status. How many are there in total?"],
+ debrief:`Neither analyst made a mistake in SQL. <b>They were answering slightly different
+   questions and nobody had written down which one “revenue” meant.</b><br><br>
+   This is what views are for. Define it <i>once</i>:
+   <code>CREATE VIEW order_revenue AS ... WHERE status IN ('completed','shipped')</code>, and
+   every report inherits the same definition. When someone later argues refunds should be
+   netted off rather than excluded, the discussion happens once and the view changes once.<br><br>
+   Undocumented definitions scattered across dozens of saved queries is the normal state of
+   most companies' analytics — and the reason nobody trusts the dashboards.`},
+
+{id:"inc6", title:"We sell 3 plans. The report shows 8.", sev:"low", type:"sql",
+ from:"Product, 10:30",
+ scenario:`<p>“The signup report groups customers by plan and shows <b>eight</b> different
+   plans. We only sell three: basic, pro and enterprise. Where are the other five coming
+   from?”</p>
+   <p>The report runs <code>SELECT plan, count(*) FROM raw_signups GROUP BY plan;</code></p>`,
+ q:"<b>Show the damage.</b> Return every distinct raw <code>plan</code> value alongside its cleaned form and how many rows carry it — as <code>raw_plan</code>, <code>clean_plan</code> and <code>n</code>, sorted by cleaned value then raw.",
+ sol:"SELECT   plan               AS raw_plan,\n         lower(btrim(plan)) AS clean_plan,\n         count(*)           AS n\nFROM     raw_signups\nGROUP BY plan, lower(btrim(plan))\nORDER BY clean_plan, raw_plan;",
+ ordered:true,
+ hints:["Look at the actual values first: <code>SELECT DISTINCT plan FROM raw_signups;</code>. What is different between them?",
+  "Two separate problems are in play — capital letters, and invisible spaces."],
+ debrief:`Eight spellings of three values: <code>pro</code>, <code>Pro</code>,
+   <code>PRO</code> and <code>' pro '</code> are four different strings to a database, and
+   <code>GROUP BY</code> treats them as four different plans.<br><br>
+   <code>lower(btrim(x))</code> collapses them, and you need <b>both</b> — <code>' pro '</code>
+   lowercased is still <code>' pro '</code>.<br><br>
+   The bigger finding is not the fix. It is that <b>every report grouped by this column has
+   been wrong for as long as it has existed</b>, and nobody noticed because eight plausible
+   rows look like data rather than like a bug. Worth telling whoever relies on it —
+   separately from, and before, fixing it.`}
+];
 
 const SCHEMA_REF = [
  ["products",["product_id int PK","sku text","product_name text","category text","unit_price numeric","cost_price numeric","stock_qty int","is_discontinued bool"]],
@@ -985,12 +1274,15 @@ without leaving your exercise.</p>`]
    STATE
    ========================================================== */
 const KEY = "sqlconsole.v1";
-let state = {week:1, ex:0, solved:{}, drafts:{}, hints:{}, ran:{}, scratch:""};
+let state = {mode:"week", week:1, ex:0, incident:0,
+             solved:{}, drafts:{}, hints:{}, ran:{}, picked:{}, scratch:""};
 try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch(e){}
+if (!state.picked) state.picked = {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} };
 const $ = id => document.getElementById(id);
-let scratchMode = false;
-const cur = () => EX[state.week][state.ex];
+const isScratch  = () => state.mode === "scratch";
+const isIncident = () => state.mode === "incident";
+const cur = () => isIncident() ? INCIDENTS[state.incident] : EX[state.week][state.ex];
 let db = null;
 
 /* ==========================================================
@@ -1013,7 +1305,7 @@ async function boot(){
     // Exposed deliberately: lets you query the database straight from the
     // browser console — await __db.query('select 1') — and makes the app
     // testable. Nothing here is secret; the whole database is on your machine.
-    window.__db = db; window.__EX = EX;
+    window.__db = db; window.__EX = EX; window.__INC = INCIDENTS;
     renderAll();
   } catch (err) {
     $("boot").innerHTML =
@@ -1034,7 +1326,7 @@ async function resetDb(){
     await db.exec("DROP SCHEMA IF EXISTS shop CASCADE;");
     await seed();
     $("boot").hidden = true;
-    renderEx();
+    renderItem();
   } catch(e){ alert("Reset failed: " + e.message); $("boot").hidden = true; }
 }
 
@@ -1044,37 +1336,138 @@ async function resetDb(){
 function renderRail(){
   $("weeklist").innerHTML = WEEKS.map(w => {
     const done = EX[w.n].every(e => state.solved[e.id]);
-    return `<li><button class="week-item" data-week="${w.n}" aria-current="${w.n===state.week}">
+    const on = state.mode === "week" && w.n === state.week;
+    return `<li><button class="week-item" data-week="${w.n}" aria-current="${on}">
       <span class="wk-num">${String(w.n).padStart(2,"0")}</span>
       <span class="wk-name">${w.name}</span>
       <span class="wk-dot ${done?"done":""}"></span></button></li>`;
   }).join("");
+
+  $("inclist").innerHTML = INCIDENTS.map((inc,i) => {
+    const on = isIncident() && i === state.incident;
+    return `<li><button class="week-item" data-inc="${i}" aria-current="${on}">
+      <span class="wk-num" style="color:var(--ochre)">!</span>
+      <span class="wk-name">${inc.title}</span>
+      <span class="wk-dot ${state.solved[inc.id]?"done":""}"></span></button></li>`;
+  }).join("");
+
+  $("lockedhead").hidden = !LOCKED.length;
   $("weeklocked").innerHTML = LOCKED.map((nm,i) =>
     `<li><button class="week-item" disabled>
       <span class="wk-num">${String(i + 1 + WEEKS.length).padStart(2,"0")}</span>
       <span class="wk-name">${nm}</span></button></li>`).join("");
 
-  const all = Object.values(EX).flat();
+  const all = Object.values(EX).flat().concat(INCIDENTS);
   const done = all.filter(e => state.solved[e.id]).length;
   const pct = Math.round(done/all.length*100);
   $("pct").textContent = pct + "%";
   $("barfill").style.width = pct + "%";
+
   document.querySelectorAll("[data-week]").forEach(b =>
-    b.onclick = () => { scratchMode=false; state.week=+b.dataset.week; state.ex=0; save(); renderAll(); });
+    b.onclick = () => { state.mode="week"; state.week=+b.dataset.week; state.ex=0; save(); renderAll(); });
+  document.querySelectorAll("[data-inc]").forEach(b =>
+    b.onclick = () => { state.mode="incident"; state.incident=+b.dataset.inc; save(); renderAll(); });
 }
 
-function renderEx(){
-  if (scratchMode) return renderScratch();
+function setEditorVisible(on){
+  $("editorbar").hidden = !on;
+  $("sql").hidden = !on;
+}
+
+/* ---- multiple choice ---- */
+function renderMCQ(e){
+  setEditorVisible(false);
+  const picked = state.picked[e.id];          // index, or undefined
+  const letters = "ABCD";
+  $("mcqzone").innerHTML = `<div class="opts">` + e.options.map((o,i) => {
+    const chosen = picked === i;
+    const reveal = picked !== undefined;
+    const cls = reveal ? (o.ok ? "right" : (chosen ? "wrong" : "")) : "";
+    return `<button class="opt ${cls}" data-opt="${i}" ${reveal?"disabled":""}
+              aria-pressed="${chosen}">
+      <span class="mk">${reveal ? (o.ok ? "✓" : (chosen ? "✗" : letters[i])) : letters[i]}</span>
+      <span>${o.t}${reveal && (o.ok || chosen) ? `<span class="opt-why">${o.why}</span>` : ""}</span>
+    </button>`;
+  }).join("") + `</div>` +
+  (picked !== undefined
+    ? `<div style="margin-top:12px"><button class="btn ghost tiny" id="btnretry" type="button">Try again</button></div>`
+    : "");
+
+  document.querySelectorAll("[data-opt]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.opt;
+    state.picked[e.id] = i;
+    state.ran[e.id] = true;
+    if (e.options[i].ok) state.solved[e.id] = true;
+    save(); renderRail(); renderItem();
+  });
+  const retry = $("btnretry");
+  if (retry) retry.onclick = () => { delete state.picked[e.id]; save(); renderItem(); };
+}
+
+/* ---- incident ticket ---- */
+function renderTicket(inc){
+  $("ticket").innerHTML = `
+    <div class="ticket">
+      <p class="from">Ticket from ${inc.from}</p>
+      ${inc.scenario}
+    </div>`;
+}
+
+function renderItem(){
+  if (isScratch())  return renderScratch();
+  if (isIncident()) return renderIncident();
+  return renderWeek();
+}
+
+function renderIncident(){
+  const inc = cur();
+  $("crumb").innerHTML = `Incident · <span class="sev ${inc.sev}">${inc.sev}</span>`;
+  $("wktitle").textContent = inc.title;
+  $("wkblurb").textContent = "A real bug this database can produce. Work out what is happening, then prove it.";
+  $("extabs").hidden = true;
+  $("ticket").hidden = false;
+  renderTicket(inc);
+
+  $("exlabel").textContent = inc.type === "mcq" ? "Your call" : "Your investigation";
+  $("question").innerHTML = inc.q;
+  $("expect").innerHTML = inc.writes
+    ? `<span style="color:var(--ochre);font-weight:700">⚠ This one changes the database.</span> Reset any time.`
+    : "";
+  const pill = $("expill");
+  if (state.solved[inc.id]) { pill.textContent="Resolved"; pill.className="pill solved"; }
+  else if (state.ran[inc.id]) { pill.textContent="Investigating"; pill.className="pill"; }
+  else { pill.textContent="Open"; pill.className="pill"; }
+
+  $("resultzone").innerHTML = "";
+  if (inc.type === "mcq") { renderMCQ(inc); }
+  else {
+    $("mcqzone").innerHTML = "";
+    setEditorVisible(true);
+    $("editorlbl").textContent = inc.writes ? "Your statements" : "Your query";
+    $("sql").value = state.drafts[inc.id] || "";
+  }
+  renderDebrief(inc);
+  showPane("hints");
+  renderHints();
+}
+
+function renderDebrief(item){
+  $("debriefzone").innerHTML = (state.solved[item.id] && item.debrief)
+    ? `<div class="debrief"><span class="lbl">What to take away</span>${item.debrief}</div>` : "";
+}
+
+function renderWeek(){
   const w = WEEKS.find(x => x.n === state.week);
   $("crumb").textContent = "Week " + state.week;
   $("wktitle").textContent = w.name;
   $("wkblurb").textContent = w.blurb;
+  $("ticket").hidden = true;
   $("extabs").hidden = false;
   $("extabs").innerHTML = EX[state.week].map((e,i) =>
     `<button class="ex-tab" role="tab" aria-selected="${i===state.ex}" data-ex="${i}">
       ${e.title}${state.solved[e.id]?' <span class="tick">✓</span>':""}</button>`).join("");
   document.querySelectorAll("[data-ex]").forEach(b =>
-    b.onclick = () => { state.ex=+b.dataset.ex; save(); renderEx(); });
+    b.onclick = () => { state.ex=+b.dataset.ex; save(); renderItem(); });
 
   const e = cur();
   $("exlabel").textContent = e.title;
@@ -1088,13 +1481,24 @@ function renderEx(){
   if (state.solved[e.id]) { pill.textContent="Solved"; pill.className="pill solved"; }
   else if (state.ran[e.id]) { pill.textContent="Attempted"; pill.className="pill"; }
   else { pill.textContent="Not attempted"; pill.className="pill"; }
-  $("sql").value = state.drafts[e.id] || "";
   $("resultzone").innerHTML = "";
+  if (e.type === "mcq") {
+    renderMCQ(e);
+  } else {
+    $("mcqzone").innerHTML = "";
+    setEditorVisible(true);
+    $("sql").value = state.drafts[e.id] || "";
+  }
+  renderDebrief(e);
   showPane("hints");
   renderHints();
 }
 
 function renderScratch(){
+  $("ticket").hidden = true;
+  $("mcqzone").innerHTML = "";
+  $("debriefzone").innerHTML = "";
+  setEditorVisible(true);
   $("crumb").textContent = "Scratchpad";
   $("wktitle").textContent = "Free SQL";
   $("wkblurb").textContent = "Run anything you like against the practice database. Nothing here is checked or graded — it is for exploring, testing an idea, or looking at a table before you write a query.";
@@ -1127,6 +1531,13 @@ function renderHints(){
   });
 
   const gate = $("solgate");
+  if (e.type === "mcq") {
+    // The explanation on each option IS the solution — a separate reveal
+    // would just duplicate it.
+    gate.innerHTML = `<b>No solution to reveal.</b> Pick an option and every answer explains
+      itself — including the ones that are wrong, which are usually the more instructive read.`;
+    return;
+  }
   if (state.ran[e.id]) {
     gate.innerHTML = `<b>Solution unlocked.</b> You have made an attempt, so you have earned it.
       Compare it with what you wrote — the difference is the lesson.
@@ -1234,14 +1645,14 @@ async function run(){
   const raw = $("sql").value;
   const zone = $("resultzone");
 
-  if (scratchMode) { state.scratch = raw; save(); }
+  if (isScratch()) { state.scratch = raw; save(); }
 
   if (!raw.trim()) {
     zone.innerHTML = `<div class="verdict note"><span class="mark">·</span><div>Nothing to run yet. Write a query above, then press Run.</div></div>`;
     return;
   }
 
-  const e = scratchMode ? null : cur();
+  const e = isScratch() ? null : cur();
   if (e) { state.drafts[e.id] = raw; state.ran[e.id] = true; }
 
   $("btnrun").disabled = true;
@@ -1256,8 +1667,8 @@ async function run(){
       Read it carefully — Postgres errors are unusually precise, and the fix is
       nearly always named in the message.</div></div>`;
     $("btnrun").disabled = false; save();
-    // renderEx() repaints the card (and clears this pane), so restore after it
-    if (e) { renderRail(); renderEx(); }
+    // renderItem() repaints the card (and clears this pane), so restore after it
+    if (e) { renderRail(); renderItem(); }
     zone.innerHTML = errHtml;
     return;
   }
@@ -1330,13 +1741,13 @@ async function run(){
   }
   zone.innerHTML = html;
   save();
-  if (e) { renderRail(); renderEx(); zone.innerHTML = html; }
+  if (e) { renderRail(); renderItem(); zone.innerHTML = html; }
 }
 
 /* ==========================================================
    WIRING
    ========================================================== */
-function renderAll(){ renderRail(); renderSchema(); renderLearn(); renderEx(); }
+function renderAll(){ renderRail(); renderSchema(); renderLearn(); renderItem(); }
 
 function showPane(name){
   document.querySelectorAll(".aside-tab").forEach(x =>
@@ -1349,18 +1760,18 @@ function showPane(name){
 $("btnrun").onclick = run;
 $("btnclear").onclick = () => {
   $("sql").value = "";
-  if (scratchMode) state.scratch = ""; else delete state.drafts[cur().id];
+  if (isScratch()) state.scratch = ""; else delete state.drafts[cur().id];
   $("resultzone").innerHTML = ""; save();
 };
 $("btnreset").onclick = resetDb;
-$("btnscratch").onclick = () => { scratchMode = !scratchMode; renderEx(); };
+$("btnscratch").onclick = () => { state.mode = isScratch() ? "week" : "scratch"; save(); renderAll(); };
 $("btnstart").onclick = () => {
   showPane("learn");
   const first = document.querySelector("#learnbox .learn-sec");
   if (first) { first.open = true; first.scrollIntoView({block:"nearest"}); }
 };
 $("sql").addEventListener("input", ev => {
-  if (scratchMode) state.scratch = ev.target.value; else state.drafts[cur().id] = ev.target.value;
+  if (isScratch()) state.scratch = ev.target.value; else state.drafts[cur().id] = ev.target.value;
   save();
 });
 $("sql").addEventListener("keydown", ev => {

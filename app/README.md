@@ -33,12 +33,12 @@ python3 -m http.server 8000
 
 ## What it does
 
-- 36 exercises across all 12 weeks, each with the real question and expected row count
+- **72 exercises** — six per week across all 12 weeks, each with the real question and expected row count
 - **6 incidents** — case-based challenges written as support tickets, where you diagnose a real bug this database can produce
 - **Answer checking** by running the reference solution against your result and comparing —
   it tells you *how* you're wrong (row count, column count, wrong order, wrong values), not
   just that you are
-- **Progressive hints**, three per exercise, revealed one at a time
+- **Progressive hints**, revealed one at a time — light at first, nearly the answer by the last
 - **The solution stays locked until you've run a query** — even a wrong one
 - **A scratchpad** for free-form SQL against the same database
 - Progress, drafts and revealed hints saved in `localStorage`, surviving reloads

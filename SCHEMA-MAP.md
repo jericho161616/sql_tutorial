@@ -272,9 +272,10 @@ SELECT * FROM orders    LIMIT 5;
 at column names — and it's how you learn that the value is `'Storage'` and not `'storage'`.
 
 You can also click through the tables visually in the
-[Supabase Table Editor](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/editor),
-or see an auto-drawn diagram in the
-[Schema Visualiser](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/database/schemas).
+app's **Tables** tab, which draws the diagram above live and lists every column.
+
+If you are running a local Postgres instead, [DBeaver](https://dbeaver.io) and pgAdmin both
+draw entity diagrams for free — see [LOCAL-SETUP.md](LOCAL-SETUP.md).
 
 ---
 

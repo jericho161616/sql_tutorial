@@ -304,7 +304,10 @@ table.grid tbody tr:hover td{background:var(--surface-2)}
   <div class="btn-row">
     <span class="status" id="pgstatus">connecting…</span>
     <button class="btn tiny ghost" id="btnscratch" type="button">Scratchpad</button>
+    <button class="btn tiny ghost" id="btnexport" type="button" title="Download your progress and answers as a file">Export progress</button>
+    <button class="btn tiny ghost" id="btnimport" type="button" title="Restore progress from a file">Import</button>
     <button class="btn tiny ghost" id="btnreset" type="button">Reset database</button>
+    <input type="file" id="fileimport" accept="application/json,.json" hidden>
   </div>
 </div>
 
@@ -2060,6 +2063,57 @@ $("btnclear").onclick = () => {
   $("resultzone").innerHTML = ""; save();
 };
 $("btnreset").onclick = resetDb;
+
+/* ----------------------------------------------------------
+   Progress export / import.
+   Everything you have done lives in this browser's localStorage,
+   which does not survive clearing site data or moving machines.
+   These two buttons make it portable.
+   ---------------------------------------------------------- */
+$("btnexport").onclick = () => {
+  const payload = {
+    kind: "sql-study-console-progress",
+    version: 1,
+    exported_at: new Date().toISOString(),
+    state
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = "sql-progress-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+$("btnimport").onclick = () => $("fileimport").click();
+$("fileimport").onchange = ev => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      const incoming = data && data.state ? data.state : data;
+      if (!incoming || typeof incoming !== "object" || !incoming.solved)
+        throw new Error("That file does not look like a progress export.");
+      // Merge rather than replace, so importing never loses work done since.
+      state.solved  = Object.assign({}, state.solved,  incoming.solved  || {});
+      state.ran     = Object.assign({}, state.ran,     incoming.ran     || {});
+      state.hints   = Object.assign({}, state.hints,   incoming.hints   || {});
+      state.picked  = Object.assign({}, state.picked,  incoming.picked  || {});
+      state.drafts  = Object.assign({}, incoming.drafts || {}, state.drafts);
+      if (incoming.scratch && !state.scratch) state.scratch = incoming.scratch;
+      save(); renderAll();
+      const n = Object.keys(state.solved).length;
+      alert("Progress restored — " + n + " item" + (n===1?"":"s") + " marked solved.\n\nMerged with what was already here, so nothing was overwritten.");
+    } catch (e) {
+      alert("Could not read that file.\n\n" + (e.message || e));
+    }
+    ev.target.value = "";
+  };
+  r.readAsText(f);
+};
 $("btnscratch").onclick = () => { state.mode = isScratch() ? "week" : "scratch"; save(); renderAll(); };
 $("btnstart").onclick = () => {
   showPane("learn");

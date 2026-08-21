@@ -42,9 +42,9 @@ usually more instructive. **Read after attempting, not instead of attempting.**
 | Activity | Where | Link |
 |---|---|---|
 | **Reading the material** | GitHub, or your editor | this repo |
-| **Writing and running SQL** | Supabase SQL Editor | [open it](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql) |
-| **Browsing data without SQL** | Supabase Table Editor | [open it](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/editor) |
-| **Seeing the schema diagram** | Supabase Schema Visualiser | [open it](https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/database/schemas) |
+| **Writing and running SQL** | The Study Console | [open it](https://jericho161616.github.io/sql_tutorial/app/) |
+| **Browsing data without SQL** | The app's **Tables** tab | in the app |
+| **Seeing the schema diagram** | [SCHEMA-MAP.md](SCHEMA-MAP.md), or the app's **Tables** tab | — |
 | **Saving your answers** | `my-answers/week-NN.sql` | in this repo |
 | **Getting unstuck** | Claude, using `prompts/` | — |
 | **Tracking progress** | `PLANNER.md` checkboxes | [PLANNER.md](PLANNER.md) |

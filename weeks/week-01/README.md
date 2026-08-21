@@ -10,7 +10,9 @@ table, in any order you like. That is genuinely most of day-to-day SQL.
 
 ## Before you start
 
-Open the SQL editor: **https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql**
+Open the app: **https://jericho161616.github.io/sql_tutorial/app/**
+
+(Or a local Postgres — see [LOCAL-SETUP.md](../../LOCAL-SETUP.md).)
 
 Run this first, every session:
 

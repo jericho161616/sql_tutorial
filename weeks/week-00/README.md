@@ -154,7 +154,8 @@ That's it. Keys are just IDs and pointers.
 
 Open the app: **https://jericho161616.github.io/sql_tutorial/app/**
 
-Or the Supabase editor: **https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql**
+Everything below works there. If you would rather use a real database on your own machine,
+[LOCAL-SETUP.md](../../LOCAL-SETUP.md) covers Docker and native installs — both free.
 
 ### Before anything: you cannot break this
 

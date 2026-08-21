@@ -24,6 +24,7 @@ often as you like. No paid tools, no subscriptions, no trial that expires.
 > | **[SCHEMA-MAP.md](SCHEMA-MAP.md)** | "Where do I even get this from?" |
 > | **[ERRORS.md](ERRORS.md)** | Something breaks and the message is gibberish |
 > | **[CHEATSHEET.md](CHEATSHEET.md)** | You need the syntax mid-query |
+> | **[LOCAL-SETUP.md](LOCAL-SETUP.md)** | You want it all running on your own machine |
 >
 > All four are also built into the app, under the **Learn** and **Tables** tabs.
 
@@ -35,12 +36,15 @@ often as you like. No paid tools, no subscriptions, no trial that expires.
 
 Your practice database is already built and waiting:
 
-**https://supabase.com/dashboard/project/qfbublnaognbrxdqqsor/sql**
+**https://jericho161616.github.io/sql_tutorial/app/**
 
-That link opens the SQL editor. Type a query, press **Run**, see results. Nothing to
-install — it works from any browser, on the free tier, indefinitely.
+That's the Study Console — real PostgreSQL running inside your browser tab, with all
+72 exercises and 6 incidents built in. Nothing to install, no account, works offline.
 
-Try this to confirm it works:
+> Prefer a real database on your own machine? See **[LOCAL-SETUP.md](LOCAL-SETUP.md)** —
+> Docker or a native install, both free, both about five minutes.
+
+Try this in the app's **Scratchpad** to confirm it works:
 
 ```sql
 SET search_path TO shop, public;
@@ -50,10 +54,10 @@ SELECT * FROM products LIMIT 5;
 You should get five rows back. If you do, you're set up. That's the whole setup step.
 
 > **One gotcha.** The `SET search_path TO shop, public;` line tells Postgres to look in
-> our `shop` schema. Run it once at the top of each editor session, or write
-> `shop.products` instead of `products` every time. Forgetting it produces
-> `relation "products" does not exist` — which is the single most common confusion in
-> week 1, and now you know the fix.
+> our `shop` schema. **The app does this for you**, but a local Postgres won't — run it once
+> at the top of each session there, or write `shop.products` instead of `products` every
+> time. Forgetting it produces `relation "products" does not exist`, which is the single
+> most common confusion in week 1, and now you know the fix.
 
 ### 2. Open the planner
 
@@ -70,7 +74,7 @@ four parts, in this order:
 |---|---|---|
 | **Concepts** | ~30 min | The ideas, in plain English. Read it. |
 | **Worked example** | ~20 min | One query, built up line by line, with its real output. |
-| **Exercises** | ~60 min | Three questions, getting harder. You write the SQL. |
+| **Exercises** | ~60 min | Six questions, getting harder. You write the SQL. |
 | **Mini-project** | ~30 min | One realistic task combining the week's skills. |
 
 ---
@@ -184,6 +188,7 @@ GLOSSARY.md          every term in plain English
 SCHEMA-MAP.md        diagram + "which table holds what"
 ERRORS.md            every error you'll hit, decoded
 CHEATSHEET.md        one-page syntax reference
+LOCAL-SETUP.md       run it all locally — Docker, native Postgres, offline app
 
 PLANNER.md           the 12-week map + your progress checkboxes
 db/                  schema, seed data, and the messy table

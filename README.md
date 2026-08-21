@@ -1,7 +1,8 @@
 # SQL Tutorial — a 12-week self-study course
 
 A free, self-paced SQL course built around one practice database you can break as
-often as you like. No paid tools, no subscriptions, no trial that expires.
+often as you like. No paid tools, no subscriptions, no trial that expires, no card
+on file — see [COSTS.md](COSTS.md) for the full audit.
 
 **Track:** database administration / data engineering, with app-development crossover
 **Pace:** about 2.5 hours per week, for 12 weeks
@@ -25,6 +26,7 @@ often as you like. No paid tools, no subscriptions, no trial that expires.
 > | **[ERRORS.md](ERRORS.md)** | Something breaks and the message is gibberish |
 > | **[CHEATSHEET.md](CHEATSHEET.md)** | You need the syntax mid-query |
 > | **[LOCAL-SETUP.md](LOCAL-SETUP.md)** | You want it all running on your own machine |
+> | **[COSTS.md](COSTS.md)** | You want proof none of this costs anything |
 >
 > All four are also built into the app, under the **Learn** and **Tables** tabs.
 
@@ -189,6 +191,7 @@ SCHEMA-MAP.md        diagram + "which table holds what"
 ERRORS.md            every error you'll hit, decoded
 CHEATSHEET.md        one-page syntax reference
 LOCAL-SETUP.md       run it all locally — Docker, native Postgres, offline app
+COSTS.md             every tool audited: what it costs and under what licence
 
 PLANNER.md           the 12-week map + your progress checkboxes
 db/                  schema, seed data, and the messy table

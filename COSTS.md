@@ -68,6 +68,19 @@ the bandwidth limit. This will never cost you anything.
 
 ---
 
+## Why the app is not bundled offline by default
+
+Vendoring PGlite into the repo would remove the last third-party dependency — and it was
+measured rather than guessed: **14 MB** of WebAssembly, comfortably inside GitHub's free
+limits.
+
+It is deliberately *not* done. jsDelivr is among the most reliable CDNs in existence, your
+browser caches PGlite after the first load, and 14 MB of vendored binary is a real cost paid
+against a hypothetical problem. [LOCAL-SETUP.md](LOCAL-SETUP.md) documents the change if it
+ever becomes worth making — it takes about five minutes.
+
+---
+
 ## What if jsDelivr disappeared?
 
 It's a free public CDN with no account behind it, so there's no bill — but it *is* a third

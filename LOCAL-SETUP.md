@@ -55,11 +55,24 @@ choose the file. It *merges*, so importing never wipes work you've done since.
 
 ---
 
-## Step 2 — Decide how you want to run SQL
+## Step 2 — How you run SQL
 
-You have three options and they all cost nothing. **You may well not need Postgres at all.**
+> ### ✅ Decided: Option A — the app
+>
+> This is the chosen path. For weeks 1–8 the app is not merely easier than a local
+> PostgreSQL, it is **better**: those weeks are pure `SELECT`, and the app adds grading,
+> progressive hints and progress tracking that a bare `psql` prompt cannot.
+>
+> **Revisit this page at week 9.** That is where you start creating tables, managing indexes
+> and granting roles — and where a real server starts teaching you things the browser cannot:
+> `pg_dump` backups, roles that actually log in, connection strings, config files. When you
+> get there, use **Option B (Docker)**.
+>
+> Nothing below needs doing today.
 
-### Option A — Just use the app *(recommended, zero setup)*
+All three options cost nothing. **You may well not need Postgres at all.**
+
+### Option A — Just use the app *(chosen — zero setup)*
 
 The Study Console already runs **real PostgreSQL inside your browser** via PGlite (WebAssembly).
 It has never talked to Supabase. It works offline. It is already everything you need for all 72
@@ -77,7 +90,7 @@ python3 -m http.server 8000
 **One caveat:** the app fetches PGlite from a CDN on first load. If you want it working with
 no internet at all, see [Fully offline](#fully-offline) below.
 
-### Option B — Real PostgreSQL via Docker *(recommended if you want the real thing)*
+### Option B — Real PostgreSQL via Docker *(for week 9 onward)*
 
 Closest to a production environment, and nothing to uninstall afterwards.
 

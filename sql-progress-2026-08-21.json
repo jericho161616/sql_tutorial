@@ -1,0 +1,17 @@
+{
+  "kind": "sql-study-console-progress",
+  "version": 1,
+  "exported_at": "2026-08-21T09:26:46.583Z",
+  "state": {
+    "mode": "week",
+    "week": 1,
+    "ex": 0,
+    "incident": 0,
+    "solved": {},
+    "drafts": {},
+    "hints": {},
+    "ran": {},
+    "picked": {},
+    "scratch": ""
+  }
+}
